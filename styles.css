@@ -64,8 +64,8 @@ dialog{border-radius:20px}.lightbox{border-radius:0}
 .upload-label>span{font-size:10px;color:var(--muted);font-weight:400}.upload-label input{position:absolute;width:1px!important;height:1px;opacity:0;padding:0!important}.upload-label:focus-within{outline:3px solid #b48d35;outline-offset:4px}
 #admin-image-preview{max-width:100%;width:180px;max-height:160px;object-fit:contain;border-radius:8px;background:#dce6d6}
 
-html[data-theme=dark]{color-scheme:dark;--ink:#e5eee4;--muted:#9baea0;--cream:#0b1412;--line:#263b31;--pine:#b8df9b;--pine-dark:#172a21;--mint:#b8df9b;background:var(--cream)}
-html[data-theme=dark] body{background:radial-gradient(ellipse 70% 650px at 75% 0,#183c2733,transparent),var(--cream)}
+html[data-theme=dark]{color-scheme:dark;--ink:#edf4e8;--muted:#b0c1ab;--cream:#142b23;--line:#3a5846;--pine:#c2e6a4;--pine-dark:#234430;--mint:#c2e6a4;background:var(--cream)}
+html[data-theme=dark] body{background:radial-gradient(ellipse 75% 700px at 80% 0,#92bb5d20,transparent),radial-gradient(ellipse 60% 600px at 5% 35%,#d3a65e0d,transparent),var(--cream)}
 html[data-theme=dark] .site-header{border-color:#9dbd7f1c}
 html[data-theme=dark] .brand small{color:#91a58e}
 html[data-theme=dark] .twitch-link{border-color:#334338;background:#17231c}
@@ -74,28 +74,34 @@ html[data-theme=dark] .twitch-link span{color:#a9bc9f}
 html[data-theme=dark] .season-label{color:#c9dabb;background:#182a1c88;border-color:#39523a}
 html[data-theme=dark] .season-label>span{background:#b8e296;box-shadow:0 0 10px #adea7c60}
 html[data-theme=dark] .hero h1{color:#f3f6ee}
-html[data-theme=dark] .hero h1 em{color:#b8df9b}
+html[data-theme=dark] .hero h1 em{color:#c6eda8}
 html[data-theme=dark] .date-pill{border-color:#3d5238;background:#1c2b1c;color:#c7e5ad}
 html[data-theme=dark] .with-love{color:#8fa28c}
-html[data-theme=dark] .hero-art-badge{background:#16251c;color:#c4d6ad;border-color:#3b5134}
-html[data-theme=dark] .calendar-section{background:#15231c;border-color:#37503b;box-shadow:0 30px 80px #00000020}
-html[data-theme=dark] .winter-scene{filter:brightness(.5) saturate(.75);opacity:.67}
-html[data-theme=dark] .calendar-toolbar,html[data-theme=dark] .calendar-bottom{color:#c2d4bd}
+html[data-theme=dark] .hero-art-badge{background:#29442d;color:#e0eac0;border-color:#748654}
+/* Eigene Abendfarben statt eines dunklen Filters: Schnee und Figuren behalten ihre Farbe. */
+html[data-theme=dark] .calendar-section{background:linear-gradient(165deg,#427c67,#68977a 72%,#c7ddba);border-color:#a0c892;box-shadow:0 22px 65px #030e0a24,0 0 55px #b4d27a09}
+html[data-theme=dark] .winter-scene{background-image:url('./assets/winter-scene-dusk.svg');filter:none;opacity:1}
+html[data-theme=dark] .winter-scene::before{opacity:1;filter:drop-shadow(0 0 5px #ffe3a5) drop-shadow(0 0 12px #f3c87970)}
+html[data-theme=dark] .calendar-toolbar{color:#fff9df;background:#214d3d9c;border:1px solid #ccdfaa55;padding:10px 12px;border-radius:10px}
+html[data-theme=dark] .calendar-bottom{color:#284d35;background:#f2f7e5eb;border:1px solid #ffffffa6;border-radius:12px;padding:12px 16px;margin-top:18px;box-shadow:0 3px 15px #1d442015}
 html[data-theme=dark] .status-dot{background:#b4d796;box-shadow:0 0 0 4px #b3d99c15}
-html[data-theme=dark] .door{background:linear-gradient(135deg,#243a2ee8,#14281fe8);border-color:#59704c90;box-shadow:0 4px 18px #06100826,inset 0 1px #d4efbd09;backdrop-filter:blur(5px)}
-html[data-theme=dark] .door::before{border-color:#91ba7940}
-html[data-theme=dark] .door:nth-child(4n+2){background:linear-gradient(135deg,#2e3d29e8,#1b2b1ce8)}
-html[data-theme=dark] .door:nth-child(7n){background:linear-gradient(135deg,#393b25e8,#242b1ce8)}
-html[data-theme=dark] .door:hover{background:linear-gradient(135deg,#385433f5,#213b27f5);border-color:#badb8f;box-shadow:0 7px 28px #a4d17c15}
-html[data-theme=dark] .door-number{color:#dfedcf;text-shadow:0 2px 12px #acd78110}
-html[data-theme=dark] .door-mark,html[data-theme=dark] .door-decoration{color:#b5c998}
-html[data-theme=dark] .door.is-opened{background:linear-gradient(135deg,#26392ae8,#17281de8);border-color:#536f45}
-html[data-theme=dark] .door.is-opened .door-number{color:#91ae7d}
+html[data-theme=dark] .door{background:linear-gradient(135deg,#5c8b68ed,#38664fed);border-color:#d0e8af9c;box-shadow:0 5px 15px #143d2526,inset 0 1px #efffdc38;backdrop-filter:blur(5px)}
+html[data-theme=dark] .door::before{border-color:#d8edb966;opacity:.85}
+html[data-theme=dark] .door:nth-child(4n+2){background:linear-gradient(135deg,#73996bed,#4d7759ed)}
+html[data-theme=dark] .door:nth-child(7n){background:linear-gradient(135deg,#a36c5cf2,#7a4941f2);border-color:#edcda29c}
+html[data-theme=dark] .door:hover{background:linear-gradient(135deg,#739f6bf5,#487753f5);border-color:#f0f7c5;box-shadow:0 7px 25px #f1df9540,inset 0 1px #ffffdf50}
+html[data-theme=dark] .door-number{color:#fffbea;text-shadow:0 2px 10px #28452250}
+html[data-theme=dark] .door-mark,html[data-theme=dark] .door-decoration{color:#f2e3a8}
+html[data-theme=dark] .door-decoration{opacity:.9}
+html[data-theme=dark] .door.is-opened{background:linear-gradient(135deg,#598369ed,#436b54ed);border-color:#d1e4b8}
+html[data-theme=dark] .door.is-opened .door-number{color:#d2e5c4}
 html[data-theme=dark] .door.is-opened .door-mark{background:#b8df9b;color:#18311e}
-html[data-theme=dark] .door.is-finale{background:linear-gradient(135deg,#45412ae8,#2f2d1ee8);border-color:#a78d58}
-html[data-theme=dark] .door.is-finale .door-number{color:#ead7a9}
+html[data-theme=dark] .door.is-finale{background:linear-gradient(135deg,#b0924af2,#84682ff2);border-color:#ffdfa0;box-shadow:0 4px 20px #f3cb5830,inset 0 1px #fff4ba55}
+html[data-theme=dark] .door.is-finale .door-number{color:#fff7d3}
+html[data-theme=dark] .door.is-today{border-color:#ffe7a2;box-shadow:0 0 0 2px #f2cf7c,0 0 28px #f4c86455}
 html[data-theme=dark] .today-tag{color:#e7d39b}
-html[data-theme=dark] .scene-caption{color:#c0d0b9}
+html[data-theme=dark] .today-tag{background:#294c2e;color:#fff4c8;left:50%;right:auto;transform:translateX(-50%);width:max-content;padding:2px 7px;border-radius:20px;bottom:7px}
+html[data-theme=dark] .scene-caption{color:#365d40;background:#f5f9e7e6;border:1px solid #ffffffa6;border-radius:30px;width:max-content;max-width:calc(100% - 32px);left:50%;transform:translateX(-50%);padding:7px 13px}
 html[data-theme=dark] .how-it-works p span,html[data-theme=dark] footer{color:#97aa99}
 html[data-theme=dark] .step-number{color:#8fa876}
 html[data-theme=dark] .footer-brand{color:#d0e3c1}
@@ -128,7 +134,7 @@ html[data-theme=dark] .skip-link{background:#23341f;color:#fff}
 @media(max-width:1000px){.hero{grid-template-columns:minmax(0,1fr) 260px;padding:38px 28px}.hero h1{font-size:52px}.calendar-section{margin:0 20px}.hero-art-badge{font-size:7px;letter-spacing:1px}.site-header nav{gap:10px}}
 @media(max-width:760px){.hero{display:block;text-align:center;padding:36px 24px}.hero-art{display:none}.season-label{margin:auto}.hero-details{justify-content:center}.hero h1{font-size:50px;letter-spacing:-2px}.hero h1 em{letter-spacing:-2px}.calendar-section{margin:0 14px;padding-left:20px;padding-right:20px}.door{min-height:102px}.site-header{padding:18px 22px}.site-header nav{gap:9px}.site-header .brand{flex-shrink:0}.twitch-link{padding:9px}.theme-toggle{width:35px;height:35px}}
 @media(max-width:480px){.site-header{padding:17px 13px;gap:10px}.brand{font-size:19px}.brand img{width:29px;height:29px}.brand small{font-size:5.5px;letter-spacing:1.15px}.site-header nav{gap:7px;max-width:48%}.twitch-link{font-size:10px;padding:8px;gap:5px}.theme-toggle{width:32px;height:32px;font-size:18px;border-radius:10px}.hero{padding:32px 17px 35px}.hero h1{font-size:43px;letter-spacing:-2px;margin-top:23px}.hero h1 em{letter-spacing:-2px}.hero-copy>p{font-size:12px}.season-label{font-size:7px;letter-spacing:1.5px;padding:8px 10px}.hero-details{margin-top:20px}.calendar-section{margin:0 10px;padding-left:12px;padding-right:12px;border-radius:18px}.doors-grid{gap:9px}.door{min-height:94px;border-radius:12px}.door::before{border-radius:8px}.door-number{font-size:31px}.calendar-toolbar{font-size:9px;gap:8px}.timezone{font-size:7px}.scene-caption{font-size:10px}.modal-header h2{font-size:22px}.github-access{padding:15px}.image-upload{display:block}.upload-label{min-width:0}#admin-image-preview{width:100%;max-height:220px;margin-top:12px}.connection-actions{gap:16px}}
-html[data-theme=dark] .winter-scene{filter:brightness(.34) saturate(.7);opacity:.62}
+@media(max-width:760px){html[data-theme=dark] .winter-scene{background-image:url('./assets/winter-scene-dusk-mobile.svg')}}
 @media(max-width:480px){.site-header .twitch-link{font-size:0;gap:0;padding:9px}.site-header .twitch-link svg{width:16px;height:16px}.site-header .nav-link{font-size:10px}}
 
 /* Derselbe sichere Text-Renderer in Live-Vorschau und Türchen. */

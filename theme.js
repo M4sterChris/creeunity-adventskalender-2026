@@ -5,7 +5,7 @@
   try { const saved = localStorage.getItem(key); if (['light', 'dark'].includes(saved)) theme = saved; } catch {}
   function apply(value) {
     document.documentElement.dataset.theme = value;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', value === 'dark' ? '#0b1412' : '#f8f8f0');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', value === 'dark' ? '#142b23' : '#f8f8f0');
     const button = document.getElementById('theme-toggle');
     if (button) {
       button.textContent = value === 'dark' ? '☀' : '☾';
