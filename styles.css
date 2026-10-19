@@ -188,3 +188,49 @@ html[data-theme=dark] .date-pill{background:#21351b;border-color:#578431;color:#
 html[data-theme=dark] .button:not(.button-secondary){background:#b0ff6b;border-color:#b0ff6b;color:#173609}
 /* Bei höheren Rasterzeilen bleiben die seitlichen Maskottchen vollständig im Bild. */
 @media(min-width:761px){.winter-scene{background-size:100% auto;background-color:#d1e3da}}
+
+/* Persönliche Weihnachtsdetails: Emote-Grün, Türkis und warmes Lichtergold. */
+:root{--emote-teal:#48ad9e;--festive-cream:#fff0ce;--festive-gold:#eed79d}
+.hero-art{background:radial-gradient(circle at 50% 48%,#48ad9e20,transparent 67%)}
+.hero-art::after{content:'';position:absolute;inset:-4px;background:url('./assets/fir-sprig.svg') left bottom / 48% auto no-repeat;pointer-events:none;z-index:-1}
+.hero-art .hero-portrait{position:relative;z-index:1;width:74%;height:auto;margin-top:12px;transform:rotate(-5deg);filter:drop-shadow(0 12px 18px #04170e55)}
+.hero-art .hero-birb{position:absolute;width:27%;height:auto;right:-4px;bottom:28px;transform:rotate(9deg);filter:drop-shadow(0 5px 9px #04170e55);z-index:3}
+.hero-art-badge{bottom:-7px;z-index:4;border-color:#48ad9e66;font-size:7px;letter-spacing:1.1px}
+.orbit-one{border-color:#48ad9e66;box-shadow:0 0 36px #48ad9e0e,inset 0 0 35px #48ad9e0c}
+.orbit-two{border-color:#eed79d50}
+.art-spark{color:var(--festive-gold)}
+.season-label{border-color:#48ad9e55}
+.festive-lights{position:absolute;inset:0 0 auto;height:65px;background:url('./assets/lights.svg') center top / 100% 100% no-repeat;filter:drop-shadow(0 0 4px #ffd67b66);pointer-events:none}
+/* Die Lichter liegen über der abgedunkelten Landschaft, niemals über den Türchen. */
+.calendar-toolbar{padding-top:12px}
+.community-scene{position:absolute;bottom:13px;left:6%;right:6%;height:132px;display:flex;justify-content:center;align-items:center;gap:32px;pointer-events:none}
+.community-scene img{object-fit:contain;filter:drop-shadow(0 8px 12px #071b1250)}
+.community-heart{width:112px;height:112px;transform:rotate(-8deg)}
+.community-lurk{width:105px;height:105px;transform:rotate(8deg);align-self:flex-end}
+.scene-message{display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;font-size:17px;font-weight:650;color:var(--ink)}
+.scene-message small{font-size:10px;font-weight:400;letter-spacing:.6px;color:var(--muted)}
+.scene-stars{color:#947331;letter-spacing:5px;font-size:16px}
+.modal-community{display:inline-flex;gap:10px;align-items:center}
+.modal-community img{width:42px;height:42px;object-fit:contain}
+.toast{padding-left:70px;min-height:64px}
+.toast::before{content:'';position:absolute;left:13px;top:50%;transform:translateY(-50%);width:43px;height:43px;background:url('./assets/emotes/piepStare.png') center / contain no-repeat}
+html[data-theme=dark] .scene-message{color:var(--festive-cream)}
+html[data-theme=dark] .scene-message small{color:#c5d4bd}
+html[data-theme=dark] .scene-stars{color:var(--festive-gold)}
+html[data-theme=dark] .with-love{color:#a7c7b8}
+html[data-theme=dark] .twitch-link{border-color:#48ad9e55}
+@media(max-width:760px){
+  .hero-art{display:grid;width:190px;margin:20px auto 8px}
+  .hero-art-badge{font-size:5.5px;letter-spacing:.8px;padding:8px 9px;bottom:-6px}
+  .hero-art .hero-birb{bottom:18px;right:-2px}
+  .art-spark-one{font-size:21px;left:3px;top:30px}.art-spark-two{font-size:15px;right:0;bottom:45px}
+  .community-scene{left:10px;right:10px;gap:16px;height:128px}
+  .community-heart{width:85px;height:85px}.community-lurk{width:75px;height:75px}
+  .scene-message{font-size:14px;gap:7px}.scene-message small{font-size:9px;letter-spacing:0}
+  .festive-lights{height:45px}
+}
+@media(max-width:480px){
+  .community-scene{gap:5px;bottom:14px}
+  .community-heart{width:63px;height:72px}.community-lurk{width:53px;height:65px;align-self:center}
+  .scene-message{font-size:12px;gap:6px}.scene-message small{font-size:8px}.scene-stars{font-size:13px}
+}

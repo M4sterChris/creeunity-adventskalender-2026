@@ -23,11 +23,20 @@
       <h1 id="page-title">Ein Türchen.<br><em>Ein bisschen Magie.</em></h1>
       <p>24 kleine Überraschungen. Eine große CreeUnity.<br>Mach’s dir gemütlich – wir zählen gemeinsam bis Weihnachten.</p>
       <div class="hero-details"><span class="date-pill">✧ &nbsp; 1. – 24. Dezember <span id="calendar-year">2026</span></span><span class="with-love">Mit Liebe von M4sterCree & der CreeUnity</span></div>
-      </div><div class="hero-art" aria-hidden="true"><div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div><img src="./assets/hero-chibi.svg" alt=""><span class="hero-art-badge">✦ &nbsp; 24 MOMENTE. EINE COMMUNITY.</span><span class="art-spark art-spark-one">✧</span><span class="art-spark art-spark-two">✦</span></div>
+      </div>
+      <!-- Eigene Emotes geben der Weihnachtskulisse den persönlichen CreeUnity-Touch. -->
+      <div class="hero-art" aria-hidden="true">
+        <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
+        <img class="hero-portrait" src="./assets/emotes/CreeCool.png" width="500" height="500" alt="" fetchpriority="high">
+        <img class="hero-birb" src="./assets/emotes/piepBlob.png" width="448" height="448" alt="">
+        <span class="hero-art-badge">✦ &nbsp; WEIHNACHTEN MIT DER CREEUNITY.</span>
+        <span class="art-spark art-spark-one">✧</span><span class="art-spark art-spark-two">✦</span>
+      </div>
     </section>
 
     <section class="calendar-section" id="kalender" aria-label="CreeUnity Adventskalender">
       <div class="winter-scene" aria-hidden="true"></div>
+      <div class="festive-lights" aria-hidden="true"></div>
       <div class="calendar-content">
         <div class="calendar-toolbar"><div class="live-label"><span class="status-dot"></span><span id="calendar-status">Der Winterzauber wird vorbereitet …</span></div><span class="timezone">◷ &nbsp; Europe/Berlin</span></div>
         <div id="preview-banner" class="preview-banner" hidden><strong>Vorschaumodus</strong><span>Alle Türchen sind freigeschaltet. Dein Fortschritt bleibt unverändert.</span><button id="end-preview" class="text-button" type="button">Beenden ×</button></div>
@@ -35,7 +44,11 @@
         <div class="doors-grid" id="doors-grid" aria-label="Türchen 1 bis 24" aria-busy="true"></div>
         <div class="calendar-bottom"><span>✦ &nbsp; Jeden Tag ein neuer Grund zur Vorfreude.</span><div class="progress-wrapper"><span id="progress-text">0 von 24 geöffnet</span><progress id="calendar-progress" value="0" max="24" aria-label="Geöffnete Türchen">0 von 24</progress></div></div>
       </div>
-      <div class="scene-caption" aria-hidden="true">Kleine Türchen, große Community.</div>
+      <div class="community-scene" aria-hidden="true">
+        <img class="community-heart" src="./assets/emotes/CreeHeart.png" width="500" height="500" alt="" loading="lazy">
+        <div class="scene-message"><span class="scene-stars">✧ &nbsp; ✦ &nbsp; ✧</span><span>Mit euch wird’s Weihnachten.</span><small>Kleine Türchen. Große CreeUnity.</small></div>
+        <img class="community-lurk" src="./assets/emotes/piepLurk.png" width="448" height="448" alt="" loading="lazy">
+      </div>
     </section>
 
     <section class="how-it-works" aria-label="So funktioniert’s"><div><span class="step-number">01</span><p><strong>Jeden Tag ein Türchen</strong><span>Ab dem 1. Dezember, nach der täglichen Freigabe.</span></p></div><div><span class="step-number">02</span><p><strong>Überraschung entdecken</strong><span>Klicke auf die Grafik, um sie ganz groß zu sehen.</span></p></div><div><span class="step-number">03</span><p><strong>Gemeinsam freuen</strong><span>Vergangene Türchen bleiben für dich geöffnet.</span></p></div></section>
@@ -49,7 +62,7 @@
     <button id="door-image-button" class="door-image-button" type="button" aria-label="Grafik in Vollbild öffnen"><img id="door-image" alt=""><span class="zoom-hint">⤢ &nbsp; Grafik vergrößern</span></button>
     <p id="image-error" class="image-error" role="status" hidden>Die Grafik konnte nicht geladen werden. Bitte versuche es später noch einmal.</p>
     <div id="door-description" class="door-description formatted-text"></div>
-    <div class="modal-footer"><span>Mit Liebe für die CreeUnity <span class="little-heart">♥</span></span><button class="text-button" data-close="door-modal" type="button">Zurück zum Kalender ↗</button></div>
+    <div class="modal-footer"><span class="modal-community"><img src="./assets/emotes/piepLove.png" width="42" height="42" alt="" loading="lazy">Mit Liebe für die CreeUnity</span><button class="text-button" data-close="door-modal" type="button">Zurück zum Kalender ↗</button></div>
   </dialog>
 
   <dialog id="lightbox" class="lightbox" aria-label="Vollbildansicht der Türchengrafik"><div class="lightbox-toolbar"><span id="lightbox-title">Türchengrafik</span><div><button id="zoom-out" class="icon-button" aria-label="Verkleinern" type="button">−</button><button id="zoom-reset" class="text-button" type="button">Einpassen</button><button id="zoom-in" class="icon-button" aria-label="Vergrößern" type="button">+</button><button class="icon-button" data-close="lightbox" aria-label="Vollbild schließen" type="button">×</button></div></div><div id="lightbox-viewport" class="lightbox-viewport"><img id="lightbox-image" alt=""></div><p class="lightbox-help">Mit + vergrößern, dann scrollen oder wischen · Esc zum Schließen</p></dialog>
