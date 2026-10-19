@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#123f37">
   <meta name="description" content="24 Tage voller Vorfreude. Der CreeUnity Adventskalender von M4sterCree und der CreeUnity Community.">
   <title>CreeUnity Adventskalender · 2026</title>
-  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="./assets/emotes/piepBlob.png" type="image/png">
   <script src="./theme.js"></script>
   <link rel="stylesheet" href="./styles.css">
   <script type="module" src="./script.js"></script>
@@ -14,7 +14,11 @@
 <body>
   <a class="skip-link" href="#kalender">Zum Adventskalender</a>
   <header class="site-header">
-    <a class="brand" href="./" aria-label="CreeUnity Startseite"><img src="./assets/favicon.svg" width="36" height="36" alt=""><span>Cree<span class="brand-light">Unity</span><small>DER COMMUNITY-ADVENTSKALENDER</small></span></a>
+    <!-- Die vollständige Birb-Silhouette funktioniert auch ohne Rahmen als Bildmarke. -->
+    <a class="brand" href="./" aria-label="CreeUnity Adventskalender – Startseite">
+      <img class="brand-mark" src="./assets/emotes/piepBlob.png" width="46" height="46" alt="">
+      <span class="brand-copy"><span class="brand-name">Cree<span class="brand-accent">Unity</span></span><small class="brand-subtitle">ADVENTSKALENDER</small></span>
+    </a>
     <nav aria-label="Community und Darstellung"><a class="nav-link" id="discord-link" hidden target="_blank" rel="noopener noreferrer">Discord ↗</a><a class="twitch-link" id="twitch-link" aria-label="M4sterCree auf Twitch öffnen" href="https://www.twitch.tv/m4stercree" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3H22v12l-5 5h-4l-3 3v-3H4V6zm2 2v12h5v3l3-3h4l2-2V5zm5 3h2v6h-2zm5 0h2v6h-2z"/></svg>M4sterCree <span>↗</span></a><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Hellmodus aktivieren" aria-pressed="true">☀</button></nav>
   </header>
   <main>
