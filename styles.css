@@ -161,22 +161,30 @@ html[data-theme=dark] .text-color-green{color:#b8df9b}html[data-theme=dark] .tex
 html[data-theme=dark] .text-spoiler{background:#40563a;border-color:#607b50}html[data-theme=dark] .text-spoiler[aria-expanded=true]{background:#9dbb7c18}
 @media(max-width:480px){.format-toolbar{padding:7px;gap:4px}.format-toolbar button{min-width:31px;height:32px;padding:0 7px}.format-toolbar select{height:32px;flex:1;font-size:11px}.format-reference{grid-template-columns:1fr}.text-live-preview{padding:11px}.text-table-scroll th,.text-table-scroll td{padding:8px}.formatted-text pre{padding:10px}}
 
-/* Alle 24 Türchen teilen dieselbe deckende Neon-Grün-Fläche – auch Tag 24. */
-:root{--door-fill:linear-gradient(145deg,#c1ff78,#8bed3e);--door-edge:#b7ff72;--door-ink:#183b0c}
+/* Einheitliche, quadratische Türchen: dunkle Mitte und leuchtender grüner Rand. */
+:root{--door-fill:radial-gradient(ellipse at 50% 42%,#284c3b 0%,#1a3329 68%,#14271f 100%);--door-edge:#a4ff58;--door-ink:#ccffa7}
+.door{aspect-ratio:1;min-height:0;min-width:0;padding:0}
 .door,.door:hover,.door.is-opened,.door.is-finale,
 html[data-theme=dark] .door,html[data-theme=dark] .door:hover,html[data-theme=dark] .door.is-opened,html[data-theme=dark] .door.is-finale{
   background:var(--door-fill);border-color:var(--door-edge);
-  box-shadow:0 4px 17px #68e63124,inset 0 1px #f4ffe6a6;
+  box-shadow:0 0 15px #8dff3826,0 5px 16px #06150a40,inset 0 0 18px #7fda490c;
 }
-.door::before,html[data-theme=dark] .door::before{border-color:#efffd59c;opacity:.9}
-.door-number,html[data-theme=dark] .door-number{color:var(--door-ink);text-shadow:none}
-.door-mark,.door-decoration,html[data-theme=dark] .door-mark,html[data-theme=dark] .door-decoration{color:#346015}
-.door.is-opened .door-mark,html[data-theme=dark] .door.is-opened .door-mark{background:#26540f;color:#ddffbe}
-.door:hover,html[data-theme=dark] .door:hover{border-color:#edffd5;box-shadow:0 7px 24px #8aff4052,inset 0 1px #f4ffe6a6}
-.door.is-today,html[data-theme=dark] .door.is-today{border-color:#d7ffa8;box-shadow:0 0 0 2px #b1ff60,0 0 26px #93ff3b44}
-.today-tag,html[data-theme=dark] .today-tag{color:#21490c;font-weight:800}
+.door::before,html[data-theme=dark] .door::before{border-color:#9bd57133;opacity:.8}
+/* Nur die Fläche wird transparenter; Zahl und Häkchen bleiben klar lesbar. */
+.door.is-opened,html[data-theme=dark] .door.is-opened{
+  background:radial-gradient(ellipse at 50% 42%,#284c3ba6 0%,#1a3329a6 68%,#14271fa6 100%);
+  border-color:#a4ff58b3;box-shadow:0 0 10px #8dff3814,0 5px 16px #06150a26;
+}
+.door-number,html[data-theme=dark] .door-number{color:var(--door-ink);text-shadow:0 0 12px #a1ff4f18}
+.door-mark,.door-decoration,html[data-theme=dark] .door-mark,html[data-theme=dark] .door-decoration{color:#a6d785}
+.door.is-opened .door-mark,html[data-theme=dark] .door.is-opened .door-mark{background:#b0ff6b;color:#173609}
+.door:hover,html[data-theme=dark] .door:hover{border-color:#d1ffa4;box-shadow:0 0 24px #99ff4c4a,0 8px 22px #071a0f50,inset 0 0 18px #7fda4915}
+.door.is-today,html[data-theme=dark] .door.is-today{border-color:#d1ffa4;box-shadow:0 0 0 2px #b1ff60,0 0 26px #93ff3b44}
+.today-tag,html[data-theme=dark] .today-tag{color:#c7ff9a;font-weight:800}
 html[data-theme=dark]{--pine:#b0ff6b;--mint:#b0ff6b}
 html[data-theme=dark] .hero h1 em{color:#b0ff6b}
 html[data-theme=dark] .season-label>span,html[data-theme=dark] .status-dot{background:#aaff60;box-shadow:0 0 12px #9aff554d}
 html[data-theme=dark] .date-pill{background:#21351b;border-color:#578431;color:#c8ff9c}
 html[data-theme=dark] .button:not(.button-secondary){background:#b0ff6b;border-color:#b0ff6b;color:#173609}
+/* Bei höheren Rasterzeilen bleiben die seitlichen Maskottchen vollständig im Bild. */
+@media(min-width:761px){.winter-scene{background-size:100% auto;background-color:#d1e3da}}
