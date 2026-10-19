@@ -16,7 +16,7 @@ createServer(async (request, response) => {
     if (privatePreview && pathname === '/doors-data.json') path = resolve(root, '.private-repository/doors-data.json');
     else if (privatePreview && /^\/images\/[a-zA-Z0-9_./-]+$/.test(pathname) && !pathname.split('/').includes('..')) {
       path = resolve(root, '.private-repository', `.${pathname}`);
-    } else if (['/', '/index.html', '/styles.css', '/script.js', '/doors-data.json'].includes(pathname) ||
+    } else if (['/', '/index.html', '/styles.css', '/script.js', '/theme.js', '/github-editor.js', '/doors-data.json'].includes(pathname) ||
       (/^\/assets\/[a-zA-Z0-9_./-]+$/.test(pathname) && !pathname.split('/').includes('..'))) {
       path = resolve(root, `.${pathname === '/' ? '/index.html' : pathname}`);
     } else { response.writeHead(404).end('Not found'); return; }

@@ -16,3 +16,117 @@ dialog{padding:0;border:1px solid #d6dfcf;border-radius:16px;color:var(--ink);ba
 .winter-scene::before{content:'';position:absolute;inset:0 0 auto;height:70px;background:url('./assets/lights.svg') center top / 100% 100% no-repeat;opacity:.85}
 @media(max-width:760px){.winter-scene{background-image:url('./assets/winter-scene-mobile.svg');background-size:100% auto;background-position:center bottom}.winter-scene::before{height:55px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Moderne CreeUnity-Oberfläche. Dunkel ist der Standard; die helle Variante bleibt wählbar. */
+:root{--sans:'Segoe UI Variable','Segoe UI',system-ui,sans-serif}
+body{background:var(--cream)}
+.site-header{gap:16px;padding-top:22px;padding-bottom:22px}
+.site-header nav{gap:16px;justify-content:flex-end;flex-wrap:wrap}
+.brand{letter-spacing:-.9px}.brand small{letter-spacing:1.6px}
+.twitch-link{border-radius:12px;background:#eff3e980}
+.theme-toggle{width:38px;height:38px;flex-shrink:0;display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--ink);font-size:20px}
+.theme-toggle:hover{background:#82b77e20}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:center;max-width:1230px;padding:44px 48px 46px;text-align:left}
+.season-label{justify-content:flex-start;letter-spacing:1.6px;font-size:9px;border:1px solid var(--line);width:fit-content;padding:9px 12px;border-radius:30px}
+.hero h1{font-family:var(--sans);font-size:clamp(44px,4.5vw,64px);font-weight:800;letter-spacing:-3px;line-height:1.08;margin:21px 0 19px}
+.hero h1 em{font-style:normal;font-weight:800;letter-spacing:-2.8px}
+.hero-copy>p{color:var(--muted);line-height:1.8;font-size:13px;margin:0}
+.hero-details{justify-content:flex-start;gap:13px;margin-top:24px;flex-wrap:wrap}
+.hero-art{position:relative;display:grid;place-items:center;aspect-ratio:1;max-width:340px;isolation:isolate}
+.hero-art::before{content:'';position:absolute;inset:30px;border-radius:50%;background:#b2d98c25;filter:blur(30px);z-index:-1}
+.hero-art>img{display:block;width:100%;filter:drop-shadow(0 16px 32px #07130c40)}
+.hero-orbit{position:absolute;width:91%;height:91%;border:1px solid #9dbd7f35;border-radius:50%;z-index:-1}
+.orbit-two{width:75%;height:75%;border-style:dashed;transform:rotate(30deg)}
+.hero-art-badge{position:absolute;bottom:13px;font-size:8px;letter-spacing:1.5px;font-weight:650;border:1px solid var(--line);padding:10px 13px;border-radius:30px;background:var(--cream);white-space:nowrap}
+.art-spark{position:absolute;color:#c9aa67}.art-spark-one{left:14px;top:57px;font-size:28px}.art-spark-two{right:16px;bottom:73px;font-size:19px}
+.calendar-section{max-width:1280px;margin:0 auto;border:1px solid var(--line);border-radius:24px;padding-top:28px;min-height:720px}
+.doors-grid{gap:14px}.door{border-radius:15px;min-height:105px;box-shadow:0 3px 14px #163c3210}
+.door::before{inset:6px;border-radius:10px;opacity:.5}
+.door-number{font-family:var(--sans);font-size:36px;font-weight:750;letter-spacing:-1.5px}
+.door-decoration{font-size:13px}.door:hover{transform:translateY(-3px)}
+.calendar-toolbar{font-size:11px;margin-bottom:20px}.calendar-bottom{padding-top:23px}
+.scene-caption{font-family:var(--sans);font-style:normal;font-size:12px;font-weight:550;letter-spacing:.3px}
+.step-number{font-family:var(--sans);font-weight:700;font-size:20px}
+.modal-header h2,legend{font-family:var(--sans);font-weight:700;letter-spacing:-.8px}
+.modal-header h2{font-size:27px}.button{border-radius:10px}.icon-button{border-radius:11px}
+dialog{border-radius:20px}.lightbox{border-radius:0}
+.github-access{margin-top:22px;border:1px solid var(--line);border-radius:14px;padding:20px;background:#e8efe180}
+.github-access h3{font-size:18px;margin:0 0 6px;letter-spacing:-.4px}
+.github-access>p{font-size:12px;line-height:1.7;margin:0 0 16px;color:var(--muted)}
+#github-login>label{margin-bottom:12px}#github-login .button{width:100%}
+.access-help{font-size:12px;line-height:1.8;margin-top:15px}.access-help summary{cursor:pointer;font-weight:650}.access-help ol{padding-left:20px}.access-help li{margin:10px 0;overflow-wrap:anywhere}
+#github-status{margin:12px 0 0!important;min-height:0;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.connection-pill{display:inline-block;border:1px solid #81a85c;padding:9px 12px;border-radius:30px;background:#a5c67c20;font-size:12px;font-weight:650}
+.connection-actions{display:flex;gap:20px;flex-wrap:wrap;margin-top:12px;font-size:12px}
+.github-save{flex-basis:100%;padding:15px}.admin-actions{align-items:stretch}
+.image-upload{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:18px 0}
+.upload-label{flex:1;min-width:200px;border:1px dashed #809974;border-radius:12px;padding:22px 16px;text-align:center;align-items:center;cursor:pointer;background:#a1c1850b;font-size:13px}
+.upload-label>span{font-size:10px;color:var(--muted);font-weight:400}.upload-label input{position:absolute;width:1px!important;height:1px;opacity:0;padding:0!important}.upload-label:focus-within{outline:3px solid #b48d35;outline-offset:4px}
+#admin-image-preview{max-width:100%;width:180px;max-height:160px;object-fit:contain;border-radius:8px;background:#dce6d6}
+
+html[data-theme=dark]{color-scheme:dark;--ink:#e5eee4;--muted:#9baea0;--cream:#0b1412;--line:#263b31;--pine:#b8df9b;--pine-dark:#172a21;--mint:#b8df9b;background:var(--cream)}
+html[data-theme=dark] body{background:radial-gradient(ellipse 70% 650px at 75% 0,#183c2733,transparent),var(--cream)}
+html[data-theme=dark] .site-header{border-color:#9dbd7f1c}
+html[data-theme=dark] .brand small{color:#91a58e}
+html[data-theme=dark] .twitch-link{border-color:#334338;background:#17231c}
+html[data-theme=dark] .twitch-link svg{fill:#c2a3e6}
+html[data-theme=dark] .twitch-link span{color:#a9bc9f}
+html[data-theme=dark] .season-label{color:#c9dabb;background:#182a1c88;border-color:#39523a}
+html[data-theme=dark] .season-label>span{background:#b8e296;box-shadow:0 0 10px #adea7c60}
+html[data-theme=dark] .hero h1{color:#f3f6ee}
+html[data-theme=dark] .hero h1 em{color:#b8df9b}
+html[data-theme=dark] .date-pill{border-color:#3d5238;background:#1c2b1c;color:#c7e5ad}
+html[data-theme=dark] .with-love{color:#8fa28c}
+html[data-theme=dark] .hero-art-badge{background:#16251c;color:#c4d6ad;border-color:#3b5134}
+html[data-theme=dark] .calendar-section{background:#15231c;border-color:#37503b;box-shadow:0 30px 80px #00000020}
+html[data-theme=dark] .winter-scene{filter:brightness(.5) saturate(.75);opacity:.67}
+html[data-theme=dark] .calendar-toolbar,html[data-theme=dark] .calendar-bottom{color:#c2d4bd}
+html[data-theme=dark] .status-dot{background:#b4d796;box-shadow:0 0 0 4px #b3d99c15}
+html[data-theme=dark] .door{background:linear-gradient(135deg,#243a2ee8,#14281fe8);border-color:#59704c90;box-shadow:0 4px 18px #06100826,inset 0 1px #d4efbd09;backdrop-filter:blur(5px)}
+html[data-theme=dark] .door::before{border-color:#91ba7940}
+html[data-theme=dark] .door:nth-child(4n+2){background:linear-gradient(135deg,#2e3d29e8,#1b2b1ce8)}
+html[data-theme=dark] .door:nth-child(7n){background:linear-gradient(135deg,#393b25e8,#242b1ce8)}
+html[data-theme=dark] .door:hover{background:linear-gradient(135deg,#385433f5,#213b27f5);border-color:#badb8f;box-shadow:0 7px 28px #a4d17c15}
+html[data-theme=dark] .door-number{color:#dfedcf;text-shadow:0 2px 12px #acd78110}
+html[data-theme=dark] .door-mark,html[data-theme=dark] .door-decoration{color:#b5c998}
+html[data-theme=dark] .door.is-opened{background:linear-gradient(135deg,#26392ae8,#17281de8);border-color:#536f45}
+html[data-theme=dark] .door.is-opened .door-number{color:#91ae7d}
+html[data-theme=dark] .door.is-opened .door-mark{background:#b8df9b;color:#18311e}
+html[data-theme=dark] .door.is-finale{background:linear-gradient(135deg,#45412ae8,#2f2d1ee8);border-color:#a78d58}
+html[data-theme=dark] .door.is-finale .door-number{color:#ead7a9}
+html[data-theme=dark] .today-tag{color:#e7d39b}
+html[data-theme=dark] .scene-caption{color:#c0d0b9}
+html[data-theme=dark] .how-it-works p span,html[data-theme=dark] footer{color:#97aa99}
+html[data-theme=dark] .step-number{color:#8fa876}
+html[data-theme=dark] .footer-brand{color:#d0e3c1}
+html[data-theme=dark] .footer-brand span{color:#a4b78e}
+html[data-theme=dark] .button{background:#b8df9b;color:#112316;border-color:#b8df9b}
+html[data-theme=dark] .button-secondary{background:#19271e;color:#daebd0;border-color:#465b3e}
+html[data-theme=dark] .icon-button{background:#223326;color:#e1edd8;border-color:#4d6043}
+html[data-theme=dark] dialog{border-color:#415538;background:#101d16}
+html[data-theme=dark] .modal-header{border-color:#30422a}
+html[data-theme=dark] .eyebrow{color:#acc08e}
+html[data-theme=dark] .door-image-button{background:#17271c}
+html[data-theme=dark] .zoom-hint{background:#1c2d20ee;color:#d8e8cb;border-color:#5b714b}
+html[data-theme=dark] .modal-footer{border-color:#30422a;color:#9eb08e}
+html[data-theme=dark] .lightbox{background:#08110d}
+html[data-theme=dark] .lightbox .icon-button{color:#ecf4e5;background:#ffffff15;border-color:#ffffff40}
+html[data-theme=dark] input:not([type=checkbox]),html[data-theme=dark] textarea{background:#0e1912;color:#e1edd7;border-color:#435738}
+html[data-theme=dark] input::placeholder,html[data-theme=dark] textarea::placeholder{color:#819578}
+html[data-theme=dark] .admin-note{background:#28331e;color:#c8d7b3}
+html[data-theme=dark] .preview-control{background:#20331e}
+html[data-theme=dark] .preview-banner{background:#35321d;color:#e6dbaf;border-color:#867247}
+html[data-theme=dark] .admin-door-picker button{background:#1d3020;color:#cee0bd;border-color:#405737}
+html[data-theme=dark] .admin-door-picker button[aria-pressed=true]{background:#b8df9b;color:#142c19}
+html[data-theme=dark] .github-access{background:#17271b;border-color:#3a5031}
+html[data-theme=dark] .upload-label{border-color:#6c8655}
+html[data-theme=dark] #admin-image-preview{background:#1b2b1b}
+html[data-theme=dark] .load-error{background:#2e2c1a;color:#e6dcb4;border-color:#7a6b3e}
+html[data-theme=dark] .toast{background:#1a2b1e;color:#ecf4e0;border-color:#7b995e}
+html[data-theme=dark] .noscript-message{background:#393019;color:#f4e5b8}
+html[data-theme=dark] .skip-link{background:#23341f;color:#fff}
+@media(max-width:1000px){.hero{grid-template-columns:minmax(0,1fr) 260px;padding:38px 28px}.hero h1{font-size:52px}.calendar-section{margin:0 20px}.hero-art-badge{font-size:7px;letter-spacing:1px}.site-header nav{gap:10px}}
+@media(max-width:760px){.hero{display:block;text-align:center;padding:36px 24px}.hero-art{display:none}.season-label{margin:auto}.hero-details{justify-content:center}.hero h1{font-size:50px;letter-spacing:-2px}.hero h1 em{letter-spacing:-2px}.calendar-section{margin:0 14px;padding-left:20px;padding-right:20px}.door{min-height:102px}.site-header{padding:18px 22px}.site-header nav{gap:9px}.site-header .brand{flex-shrink:0}.twitch-link{padding:9px}.theme-toggle{width:35px;height:35px}}
+@media(max-width:480px){.site-header{padding:17px 13px;gap:10px}.brand{font-size:19px}.brand img{width:29px;height:29px}.brand small{font-size:5.5px;letter-spacing:1.15px}.site-header nav{gap:7px;max-width:48%}.twitch-link{font-size:10px;padding:8px;gap:5px}.theme-toggle{width:32px;height:32px;font-size:18px;border-radius:10px}.hero{padding:32px 17px 35px}.hero h1{font-size:43px;letter-spacing:-2px;margin-top:23px}.hero h1 em{letter-spacing:-2px}.hero-copy>p{font-size:12px}.season-label{font-size:7px;letter-spacing:1.5px;padding:8px 10px}.hero-details{margin-top:20px}.calendar-section{margin:0 10px;padding-left:12px;padding-right:12px;border-radius:18px}.doors-grid{gap:9px}.door{min-height:94px;border-radius:12px}.door::before{border-radius:8px}.door-number{font-size:31px}.calendar-toolbar{font-size:9px;gap:8px}.timezone{font-size:7px}.scene-caption{font-size:10px}.modal-header h2{font-size:22px}.github-access{padding:15px}.image-upload{display:block}.upload-label{min-width:0}#admin-image-preview{width:100%;max-height:220px;margin-top:12px}.connection-actions{gap:16px}}
+html[data-theme=dark] .winter-scene{filter:brightness(.34) saturate(.7);opacity:.62}
+@media(max-width:480px){.site-header .twitch-link{font-size:0;gap:0;padding:9px}.site-header .twitch-link svg{width:16px;height:16px}.site-header .nav-link{font-size:10px}}

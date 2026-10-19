@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { getBerlinDateParts, isDoorUnlocked, validateConfig, safeUrl } from '../script.js';
+import { getBerlinDateParts, isDoorUnlocked, validateConfig, safeUrl, getDoorOrder } from '../script.js';
 
 const config = JSON.parse(await readFile(new URL('../examples/doors-data.example.json', import.meta.url), 'utf8'));
 
@@ -59,4 +59,11 @@ test('Links und Bildpfade lassen keine aktiven URL-Schemas zu', () => {
   assert.equal(safeUrl('https://example.com/image.png', { image: true }), 'https://example.com/image.png');
   assert.equal(safeUrl('https://user:pass@example.com'), '');
   assert.equal(safeUrl('relative-link'), '');
+});
+test('Gemischte Reihenfolge bleibt stabil und enthält jeden Tag genau einmal', () => {
+  const order = getDoorOrder(2026);
+  assert.deepEqual(order, getDoorOrder(2026));
+  assert.deepEqual([...order].sort((a, b) => a - b), Array.from({ length: 24 }, (_, i) => i + 1));
+  assert.notDeepEqual(order, Array.from({ length: 24 }, (_, i) => i + 1));
+  assert.notDeepEqual(order, getDoorOrder(2027));
 });

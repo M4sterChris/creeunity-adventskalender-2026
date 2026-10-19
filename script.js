@@ -2,6 +2,8 @@
  * Die öffentliche Konfiguration enthält nur bereits veröffentlichte Tagesinhalte.
  * Die tägliche GitHub Action liest die vollständigen Inhalte aus einem privaten Repository.
  */
+import { GitHubEditor, detectImage, privateImagePath } from './github-editor.js';
+
 const BERLIN = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit',
 });
@@ -18,6 +20,18 @@ export function isDoorUnlocked(day, year, date = new Date()) {
   if (!Number.isInteger(day) || day < 1 || day > 24) return false;
   const berlin = getBerlinDateParts(date);
   return berlin.year > year || (berlin.year === year && berlin.month === 12 && berlin.day >= day);
+}
+
+/** Gemischt, aber pro Kalenderjahr stabil: kein Springen bei Refresh oder Datumswechsel. */
+export function getDoorOrder(year) {
+  const days = Array.from({ length: 24 }, (_, index) => index + 1);
+  let seed = year >>> 0;
+  for (let i = days.length - 1; i > 0; i--) {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    const j = seed % (i + 1);
+    [days[i], days[j]] = [days[j], days[i]];
+  }
+  return days;
 }
 
 /** Nur HTTP(S) und relative Bildpfade. data:, javascript: und HTML werden abgewiesen. */
@@ -76,6 +90,55 @@ function initialize() {
   let resetArmed = false;
   let refreshing = false;
   let refreshTime = 0;
+  let repository = null;
+  let githubBusy = false;
+  let doorRequest = 0;
+  const pendingImages = new Map();
+  const privatePreviews = new Map();
+
+  function clearPrivateImages() {
+    for (const item of pendingImages.values()) URL.revokeObjectURL(item.url);
+    for (const url of privatePreviews.values()) URL.revokeObjectURL(url);
+    pendingImages.clear(); privatePreviews.clear();
+  }
+  function githubStatus(message) { $('github-status').textContent = message; }
+  function setGitHubBusy(value) {
+    githubBusy = value;
+    $('github-connect').disabled = value;
+    $('github-reload').disabled = value;
+    $('github-disconnect').disabled = value;
+    $('github-token').disabled = value;
+    $('admin-form').querySelectorAll('button,input,textarea').forEach(el => { el.disabled = value; });
+    $('github-save').disabled = value || !repository;
+  }
+  async function resolveDoorImage(door) {
+    const pending = pendingImages.get(door.day);
+    if (pending?.path === door.image) return pending.url;
+    if (!repository || !/^(\.\/)?images\//.test(door.image)) return door.image;
+    const path = privateImagePath(door.image);
+    if (privatePreviews.has(path)) return privatePreviews.get(path);
+    const activeRepository = repository;
+    const blob = await activeRepository.image(path);
+    if (repository !== activeRepository) throw new Error('Die Verbindung wurde beendet.');
+    const extension = path.split('.').pop().toLowerCase();
+    const mime = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', svg: 'image/svg+xml' }[extension];
+    if (!mime) throw new Error('Dieses Bildformat kann nicht angezeigt werden.');
+    const url = URL.createObjectURL(new Blob([blob], { type: mime }));
+    privatePreviews.set(path, url);
+    return url;
+  }
+  async function updateEditorImage() {
+    if (!state.editor) return;
+    const day = state.selectedDay;
+    const image = $('admin-door-image').value.trim();
+    $('admin-image-preview').hidden = true;
+    try {
+      const url = await resolveDoorImage({ day, image });
+      if (state.selectedDay !== day || $('admin-door-image').value.trim() !== image) return;
+      $('admin-image-preview').src = url;
+      $('admin-image-preview').hidden = false;
+    } catch { /* Die Türchen-Vorschau zeigt bei Bedarf den ausführlichen Bildhinweis. */ }
+  }
 
   // Speicher ist optional: Privatmodus/volle Quota dürfen den Kalender nicht lahmlegen.
   function readStorage(key, session = false) {
@@ -166,7 +229,8 @@ function initialize() {
       : december && berlin.day <= 24 ? `${berlin.day}. Dezember · Dein Wintermoment wartet`
       : '24 Türchen voller CreeUnity-Momente';
     const fragment = document.createDocumentFragment();
-    for (const door of state.config.doors) {
+    for (const day of getDoorOrder(year)) {
+      const door = state.config.doors.find(item => item.day === day);
       const opened = state.opened.has(door.day);
       const unlocked = isDoorUnlocked(door.day, year, now) && door.released !== false;
       const today = december && berlin.day === door.day;
@@ -215,7 +279,7 @@ function initialize() {
     const door = state.config.doors.find(item => item.day === day);
     if (!door) return;
     if (!state.preview && !isDoorUnlocked(day, state.config.year)) {
-      toast(`Noch ein bisschen Vorfreude! Türchen ${day} öffnet am ${day}. Dezember ${state.config.year} um 00:00 Uhr (Europe/Berlin). ✨`);
+      toast(`Noch ein bisschen Vorfreude! Türchen ${day} öffnet ab dem ${day}. Dezember ${state.config.year} nach der täglichen Freigabe (Europe/Berlin). ✨`);
       return;
     }
     if (!state.preview && door.released === false) {
@@ -224,13 +288,19 @@ function initialize() {
       toast('Die heutige Überraschung wird gerade vorbereitet. Schau gleich noch einmal vorbei – sie erscheint hier automatisch. ✨');
       return;
     }
+    const request = ++doorRequest;
+    let image = '';
+    try { image = await resolveDoorImage(door); }
+    catch (error) { feedback(error.message); }
+    if (request !== doorRequest) return;
     state.activeDay = day;
     $('door-eyebrow').textContent = `${state.preview ? 'VORSCHAU · ' : ''}${day}. DEZEMBER ${state.config.year} · CREEUNITY`;
     $('door-title').textContent = door.title;
     $('door-image').alt = door.alt || `Grafik zu ${door.title}`;
-    $('door-image-button').hidden = false;
-    $('image-error').hidden = true;
-    $('door-image').src = door.image;
+    $('door-image-button').hidden = !image;
+    $('image-error').hidden = Boolean(image);
+    if (image) $('door-image').src = image;
+    else $('door-image').removeAttribute('src');
     renderText(door.text, $('door-description'));
     if (!state.preview) {
       state.opened.add(day);
@@ -328,6 +398,7 @@ function initialize() {
     $('admin-door-alt').value = door.alt;
     $('admin-door-text').value = door.text;
     $('admin-door-picker').querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.day) === door.day)));
+    updateEditorImage();
   }
   function captureEditor() {
     const door = state.editor.doors.find(item => item.day === state.selectedDay);
@@ -366,7 +437,7 @@ function initialize() {
   $('admin-form').addEventListener('submit', event => {
     event.preventDefault();
     if (!applyEditor()) return;
-    feedback(writeStorage(DRAFT_KEY, JSON.stringify(state.config)) ? 'Entwurf nur in diesem Browser gespeichert. Exportierte Inhalte gehören ausschließlich in das private Inhalte-Repository.' : 'Lokaler Speicher ist nicht verfügbar. Bitte sichere deinen Entwurf mit „JSON herunterladen“.');
+    feedback(writeStorage(DRAFT_KEY, JSON.stringify(state.config)) ? `Entwurf nur in diesem Browser gespeichert.${pendingImages.size ? ' Neu ausgewählte Bilder bitte zusätzlich privat auf GitHub speichern.' : ''}` : 'Lokaler Speicher ist nicht verfügbar. Bitte sichere deinen Entwurf mit „JSON herunterladen“.');
   });
   $('export-config').addEventListener('click', () => {
     if (!applyEditor()) return;
@@ -390,6 +461,7 @@ function initialize() {
     event.target.value = '';
   });
   $('discard-draft').addEventListener('click', () => {
+    if (repository) { feedback('Bitte zuerst abmelden, um zur öffentlichen Ansicht zurückzukehren. Deine privaten Eingaben bleiben bis dahin erhalten.'); return; }
     const removed = writeStorage(DRAFT_KEY, null);
     state.config = structuredClone(state.published); state.selectedDay = 1;
     readProgress(); populateAdmin(); updateLinks(); renderCalendar();
@@ -401,6 +473,87 @@ function initialize() {
       feedback('Aktiviere zuerst den Vorschaumodus, um dieses zukünftige Türchen zu testen.'); return;
     }
     openDoor(state.selectedDay, event.currentTarget);
+  });
+  $('admin-image-preview').addEventListener('error', () => { $('admin-image-preview').hidden = true; });
+  $('admin-door-image').addEventListener('change', updateEditorImage);
+  $('admin-image-upload').addEventListener('change', async event => {
+    const file = event.target.files[0];
+    if (!file || githubBusy || !state.editor) return;
+    setGitHubBusy(true);
+    const day = state.selectedDay;
+    try {
+      if (file.size > 10 * 1024 * 1024) throw new Error('Bitte ein Bild bis maximal 10 MB wählen.');
+      captureEditor();
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const type = detectImage(bytes);
+      const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(n => n.toString(16).padStart(2, '0')).join('').slice(0, 16);
+      const path = `./images/door-${String(day).padStart(2, '0')}-${digest}.${type.extension}`;
+      const previous = pendingImages.get(day);
+      if (previous) URL.revokeObjectURL(previous.url);
+      const url = URL.createObjectURL(new Blob([bytes], { type: type.mime }));
+      pendingImages.set(day, { path, bytes, url });
+      const door = state.editor.doors.find(item => item.day === day);
+      door.image = path;
+      if (!door.alt) door.alt = `Grafik zu Türchen ${day}`;
+      showEditorDoor();
+      feedback(repository ? 'Bild ausgewählt. Mit „Privat auf GitHub speichern“ werden Bild und Text zusammen gesichert.' : 'Bild für die Vorschau ausgewählt. Verbinde dich vor dem Hochladen mit dem privaten Kalender.');
+    } catch (error) { feedback(error.message); }
+    finally { event.target.value = ''; setGitHubBusy(false); }
+  });
+
+  async function connectRepository(reload = false) {
+    if (githubBusy) return;
+    setGitHubBusy(true);
+    let candidate;
+    try {
+      githubStatus('Privater Kalender wird geladen …');
+      candidate = reload ? repository : new GitHubEditor($('github-token').value);
+      $('github-token').value = '';
+      const config = validateConfig(await candidate.load());
+      if (repository && repository !== candidate) repository.disconnect();
+      repository = candidate;
+      clearPrivateImages();
+      state.config = config; state.selectedDay = 1;
+      state.preview = true;
+      writeStorage(PREVIEW_KEY, 'true', true);
+      readProgress(); updateLinks(); populateAdmin(); renderCalendar();
+      $('github-login').hidden = true; $('github-connected').hidden = false;
+      githubStatus('Private Inhalte geladen. Wähle ein Türchen, ändere Text oder Bild und speichere direkt auf GitHub. Die Vorschau ist aktiv.');
+    } catch (error) {
+      if (!reload) candidate?.disconnect();
+      githubStatus(error.message);
+    } finally { $('github-token').value = ''; setGitHubBusy(false); }
+  }
+  $('github-connect').addEventListener('click', () => connectRepository());
+  $('github-token').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); connectRepository(); } });
+  $('github-reload').addEventListener('click', () => connectRepository(true));
+  $('github-save').addEventListener('click', async () => {
+    if (!repository || githubBusy || !applyEditor()) return;
+    setGitHubBusy(true);
+    try {
+      const images = [...pendingImages.values()].filter(item => state.config.doors.some(door => door.image === item.path)).map(({ path, bytes }) => ({ path, bytes }));
+      feedback('Texte und Bilder werden privat gespeichert …');
+      await repository.save(state.config, images);
+      for (const item of pendingImages.values()) {
+        if (state.config.doors.some(door => door.image === item.path)) privatePreviews.set(privateImagePath(item.path), item.url);
+        else URL.revokeObjectURL(item.url);
+      }
+      pendingImages.clear();
+      feedback('Auf GitHub gespeichert ✓ Künftige Türchen bleiben privat. Bereits fällige Inhalte werden nach der automatischen Veröffentlichung sichtbar.');
+    } catch (error) { feedback(error.message); }
+    finally { setGitHubBusy(false); }
+  });
+  $('github-disconnect').addEventListener('click', () => {
+    repository?.disconnect(); repository = null; ++doorRequest;
+    clearPrivateImages();
+    state.config = structuredClone(state.published); state.preview = false; state.selectedDay = 1;
+    writeStorage(PREVIEW_KEY, 'false', true);
+    readProgress(); updateLinks(); populateAdmin(); renderCalendar();
+    $('door-title').textContent = ''; $('door-description').replaceChildren();
+    $('door-image').removeAttribute('src'); $('admin-image-preview').removeAttribute('src'); $('admin-image-preview').hidden = true;
+    $('github-login').hidden = false; $('github-connected').hidden = true;
+    githubStatus('Abgemeldet. Ein ausdrücklich lokal gespeicherter Entwurf bleibt in diesem Browser erhalten.');
+    setGitHubBusy(false);
   });
   if (adminAccess) {
     $('admin-entry').hidden = false;

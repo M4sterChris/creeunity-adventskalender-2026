@@ -1,6 +1,6 @@
 # CreeUnity Adventskalender 2026
 
-Responsive HTML/CSS/Vanilla-JavaScript-App für M4sterCree und die CreeUnity. Die Website läuft auf GitHub Pages. Noch nicht veröffentlichte Inhalte liegen getrennt in einem privaten GitHub-Repository.
+Responsive HTML/CSS/Vanilla-JavaScript-App für M4sterCree und die CreeUnity, mit modernem Dark Mode als Standard, umschaltbarem Hellmodus und gemischten Türchen. Die Website läuft auf GitHub Pages. Noch nicht veröffentlichte Inhalte liegen getrennt in einem privaten GitHub-Repository.
 
 - [Öffentliche Website-Quellen](https://github.com/M4sterChris/creeunity-adventskalender-2026)
 - [Private Tagesinhalte](https://github.com/M4sterChris/creeunity-adventskalender-2026-inhalte) – nur für berechtigte Personen
@@ -18,12 +18,26 @@ Eine geöffnete Website prüft etwa jede Minute auf neue Veröffentlichungen und
 
 ## Inhalte bearbeiten
 
-1. Die Kalender-URL mit `?admin=true` öffnen. Dieser Editor ist lokal, kein geschützter Online-Login.
-2. Für alle vollständigen Inhalte die JSON aus dem **privaten Inhalte-Repository** importieren. Die öffentliche Version kennt die noch geheimen Inhalte nicht.
-3. Kalenderjahr, Twitch-/Discord-Link und die 24 Tagesinhalte bearbeiten. Ohne Discord-Einladung wird kein Link angezeigt.
-4. Bilder im privaten Repository unter `images/` ablegen und in der JSON z. B. `./images/tuerchen5.png` eintragen. Bilder vor der Freigabe nicht ins öffentliche Repository hochladen.
-5. Optional den Entwurf lokal speichern und mit dem Vorschaumodus prüfen. Vorschauöffnungen ändern den Fortschritt nicht. Lokale private Bilder werden über den privaten Vorschau-Server sichtbar (siehe unten).
-6. **JSON herunterladen** und ausschließlich `doors-data.json` im **privaten** Repository ersetzen. Die Action übernimmt die tägliche Veröffentlichung.
+1. [Web-Editor öffnen](https://m4sterchris.github.io/creeunity-adventskalender-2026/?admin=true) oder unten auf der Website **Türchen verwalten** anklicken.
+2. Einen [GitHub-Zugriffsschlüssel erstellen](https://github.com/settings/personal-access-tokens/new?name=CreeUnity%20Editor&target_name=M4sterChris&contents=write&expires_in=90). Unter **Only select repositories** ausschließlich `creeunity-adventskalender-2026-inhalte` wählen. Unter Repository permissions **Contents: Read and write** erlauben. Keine weiteren Rechte sind erforderlich. Den Schlüssel nicht in den Chat, URLs oder Repository-Dateien kopieren.
+3. Den Schlüssel im Editor einfügen und **Privaten Kalender laden** wählen. Alle 24 vollständigen Inhalte werden direkt aus dem privaten Repository geladen. Der Vorschaumodus ist dabei automatisch aktiv.
+4. Ein Türchen auswählen, Überschrift und Text bearbeiten und mit **Bild vom Gerät auswählen** eine Grafik hochladen. Unterstützt werden PNG, JPG, WebP, GIF und AVIF bis 10 MB. Eine Bildbeschreibung hilft bei der Barrierefreiheit. Ohne Discord-Einladung wird kein Discord-Link angezeigt.
+5. Mit **Dieses Türchen ansehen** das Ergebnis prüfen, inklusive großer Grafik und Lightbox.
+6. **Privat auf GitHub speichern** sichert alle aktuellen Texte und neu ausgewählten Bilder gemeinsam in einem Commit im privaten Repository. Die tägliche Action veröffentlicht weiterhin nur bereits fällige Tage.
+
+Der Schlüssel liegt nur während des Besuchs im Arbeitsspeicher. Er wird weder in `localStorage` noch in `sessionStorage` gespeichert und ausschließlich im Authorization-Header an die GitHub-API geschickt. Nach Neuladen oder **Abmelden** ist eine neue Verbindung erforderlich. Das öffentlich erreichbare Editor-Formular allein gewährt keinen Zugriff auf private Inhalte.
+
+Beim Speichern prüft der Editor, ob die Kalenderdatei inzwischen von jemand anderem geändert wurde. In diesem Fall wird nichts überschrieben. Den eigenen Stand als JSON sichern und danach **Aktuellen Stand laden** wählen. Ein ausdrücklich lokal gespeicherter Entwurf enthält private Inhalte und bleibt auf diesem Gerät; neu ausgewählte, noch nicht hochgeladene Bilder bleiben nur im Arbeitsspeicher.
+
+### Zugang für weitere Bearbeiter
+
+Der Repository-Inhaber kann pro Person einen separaten, zeitlich begrenzten Schlüssel ausschließlich für das private Inhalte-Repository anlegen, vertraulich weitergeben und jederzeit unter den GitHub-Token-Einstellungen widerrufen. Ein solcher Schlüssel erlaubt Lesen und Schreiben dieses gesamten privaten Repositorys; keine Beschränkung auf einzelne Türchen. Private Inhalte sind für diese Bearbeiter sichtbar. Ein zusätzlicher Webserver wird nicht benötigt.
+
+Alternativ können Mitarbeitende unter [Repository-Zugriff](https://github.com/M4sterChris/creeunity-adventskalender-2026-inhalte/settings/access) direkt zu GitHub eingeladen werden. GitHub kann fine-grained Tokens für persönliche Repositories, bei denen man nur externer Mitarbeiter ist, einschränken; für den Web-Editor im Zweifel einen vom Repository-Inhaber erstellten, separat widerrufbaren Schlüssel verwenden. [GitHub-Dokumentation zu Zugriffsschlüsseln](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).
+
+### Optional: Offline-/JSON-Workflow
+
+Der bisherige lokale Editor, JSON-Import und JSON-Export bleiben verfügbar. Exportierte vollständige `doors-data.json` und lokale Bilder ausschließlich ins **private Inhalte-Repository** übernehmen. Bilder unter `images/` ablegen und z. B. als `./images/tuerchen5.png` referenzieren. Die öffentliche `doors-data.json` wird automatisch erzeugt.
 
 Die 24 mitgelieferten Grafiken sind klar gekennzeichnete Beispiele, keine echten Gewinne. Vor dem Start die Beispiele im privaten Inhalte-Repository durch eure Tagesinhalte ersetzen. Die öffentliche Datei `doors-data.json` wird automatisch erzeugt und sollte nicht direkt gepflegt werden.
 
@@ -78,6 +92,8 @@ Bei einem Umzug den Repository-Namen im privaten Workflow anpassen und den Deplo
 
 ## Bilder, Bedienung und Fortschritt
 
+Dark Mode ist beim ersten Besuch der Standard. Der Sonnenschalter im Header aktiviert den Hellmodus. Die gewählte Darstellung wird unter `creeunity:theme` im Browser gespeichert. Die Türchen sind pro Kalenderjahr in einer festen, gemischten Reihenfolge angeordnet und ändern ihre Position nicht bei einem Reload.
+
 Die Tagesgrafik wird vollständig mit `object-fit: contain` angezeigt. Ein Klick öffnet die bildschirmfüllende Lightbox. **+ / −** zoomen bis auf das Fünffache der eingepassten Größe; anschließend scrollen oder wischen. **Einpassen / Reset** stellt die Gesamtansicht wieder her. **Esc** schließt den obersten Dialog. Tastaturfokus, Bildbeschreibungen und reduzierte Bewegung werden berücksichtigt.
 
 Geöffnete Tage werden pro Kalenderjahr unter `creeunity:opened:JAHR` in `localStorage` gespeichert. Unter **Infos & Datenschutz** lässt sich der Fortschritt zurücksetzen. Bei blockiertem Speicher funktioniert die App weiter, behält den Fortschritt aber nur während des Besuchs. Die App setzt keine Cookies und verwendet kein Tracking oder externe Schriftarten. Fremdgehostete Bilder können Verbindungsdaten an deren Anbieter übertragen.
@@ -87,7 +103,9 @@ Für echte Gewinnspiele Teilnahmebedingungen und erforderliche Betreiber-/Datens
 ## Dateien und Tests
 
 ```text
-index.html, styles.css, script.js   Responsive Website und lokaler Editor
+index.html, styles.css, script.js   Moderne Website und Web-Editor
+theme.js                          Dunkel-/Hellmodus ohne helles Aufblitzen
+github-editor.js                  Privater GitHub-Zugriff und atomare Speicherung
 doors-data.json                    Automatisch erzeugte öffentliche Tagesinhalte
 assets/                           Winterillustration, Beispiele und freigegebene Bilder
 examples/doors-data.example.json   Öffentliche, ausdrücklich fiktive Beispieldaten
