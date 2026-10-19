@@ -1,0 +1,12 @@
+{
+  "name": "creeunity-adventskalender",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Buildfreier CreeUnity Adventskalender für GitHub Pages",
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node --test tests/calendar.test.mjs"
+  },
+  "engines": { "node": ">=20" }
+}

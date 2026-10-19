@@ -1,0 +1,178 @@
+{
+  "version": 1,
+  "year": 2026,
+  "links": {
+    "twitch": "https://www.twitch.tv/m4stercree",
+    "discord": ""
+  },
+  "doors": [
+    {
+      "day": 1,
+      "title": "Türchen 1 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-01.svg",
+      "alt": "Beispielgrafik für Türchen 1: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 2,
+      "title": "Türchen 2 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-02.svg",
+      "alt": "Beispielgrafik für Türchen 2: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 3,
+      "title": "Türchen 3 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-03.svg",
+      "alt": "Beispielgrafik für Türchen 3: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 4,
+      "title": "Türchen 4 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-04.svg",
+      "alt": "Beispielgrafik für Türchen 4: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 5,
+      "title": "Türchen 5 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-05.svg",
+      "alt": "Beispielgrafik für Türchen 5: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 6,
+      "title": "Türchen 6 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-06.svg",
+      "alt": "Beispielgrafik für Türchen 6: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 7,
+      "title": "Türchen 7 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-07.svg",
+      "alt": "Beispielgrafik für Türchen 7: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 8,
+      "title": "Türchen 8 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-08.svg",
+      "alt": "Beispielgrafik für Türchen 8: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 9,
+      "title": "Türchen 9 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-09.svg",
+      "alt": "Beispielgrafik für Türchen 9: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 10,
+      "title": "Türchen 10 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-10.svg",
+      "alt": "Beispielgrafik für Türchen 10: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 11,
+      "title": "Türchen 11 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-11.svg",
+      "alt": "Beispielgrafik für Türchen 11: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 12,
+      "title": "Türchen 12 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-12.svg",
+      "alt": "Beispielgrafik für Türchen 12: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 13,
+      "title": "Türchen 13 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-13.svg",
+      "alt": "Beispielgrafik für Türchen 13: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 14,
+      "title": "Türchen 14 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-14.svg",
+      "alt": "Beispielgrafik für Türchen 14: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 15,
+      "title": "Türchen 15 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-15.svg",
+      "alt": "Beispielgrafik für Türchen 15: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 16,
+      "title": "Türchen 16 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-16.svg",
+      "alt": "Beispielgrafik für Türchen 16: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 17,
+      "title": "Türchen 17 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-17.svg",
+      "alt": "Beispielgrafik für Türchen 17: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 18,
+      "title": "Türchen 18 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-18.svg",
+      "alt": "Beispielgrafik für Türchen 18: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 19,
+      "title": "Türchen 19 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-19.svg",
+      "alt": "Beispielgrafik für Türchen 19: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 20,
+      "title": "Türchen 20 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-20.svg",
+      "alt": "Beispielgrafik für Türchen 20: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 21,
+      "title": "Türchen 21 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-21.svg",
+      "alt": "Beispielgrafik für Türchen 21: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 22,
+      "title": "Türchen 22 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-22.svg",
+      "alt": "Beispielgrafik für Türchen 22: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 23,
+      "title": "Türchen 23 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-23.svg",
+      "alt": "Beispielgrafik für Türchen 23: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    },
+    {
+      "day": 24,
+      "title": "Türchen 24 – Dein CreeUnity-Moment",
+      "image": "./assets/doors/day-24.svg",
+      "alt": "Beispielgrafik für Türchen 24: ein grünes CreeUnity-Chibi mit Weihnachtsmütze. Hier ist Platz für die Tagesüberraschung.",
+      "text": "Schön, dass du dabei bist! ✨\n\nDiese Grafik ist ein Platzhalter. Die CreeUnity kann hier die Tagesüberraschung, eine Ankündigung oder einen Gewinn präsentieren.\n\nSchau bei M4sterCree vorbei: https://www.twitch.tv/m4stercree"
+    }
+  ]
+}

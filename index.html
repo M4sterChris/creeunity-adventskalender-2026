@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123f37">
+  <meta name="description" content="24 Tage voller Vorfreude. Der CreeUnity Adventskalender von M4sterCree und der CreeUnity Community.">
+  <title>CreeUnity Adventskalender · 2026</title>
+  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./script.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#kalender">Zum Adventskalender</a>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="CreeUnity Startseite"><img src="./assets/favicon.svg" width="36" height="36" alt=""><span>Cree<span class="brand-light">Unity</span><small>DER COMMUNITY-ADVENTSKALENDER</small></span></a>
+    <nav aria-label="Community"><a class="nav-link" id="discord-link" hidden target="_blank" rel="noopener noreferrer">Discord ↗</a><a class="twitch-link" id="twitch-link" href="https://www.twitch.tv/m4stercree" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3H22v12l-5 5h-4l-3 3v-3H4V6zm2 2v12h5v3l3-3h4l2-2V5zm5 3h2v6h-2zm5 0h2v6h-2z"/></svg>M4sterCree <span>↗</span></a></nav>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div class="season-label"><span></span> DEIN DEZEMBER. DEINE COMMUNITY.</div>
+      <h1 id="page-title">Ein Türchen.<br><em>Ein bisschen Magie.</em></h1>
+      <p>24 kleine Überraschungen. Eine große CreeUnity.<br>Mach’s dir gemütlich – wir zählen gemeinsam bis Weihnachten.</p>
+      <div class="hero-details"><span class="date-pill">✧ &nbsp; 1. – 24. Dezember <span id="calendar-year">2026</span></span><span class="with-love">Mit Liebe von M4sterCree & der CreeUnity</span></div>
+      <span class="hero-spark spark-one" aria-hidden="true">✧</span><span class="hero-spark spark-two" aria-hidden="true">✦</span>
+    </section>
+
+    <section class="calendar-section" id="kalender" aria-label="CreeUnity Adventskalender">
+      <div class="winter-scene" aria-hidden="true"></div>
+      <div class="calendar-content">
+        <div class="calendar-toolbar"><div class="live-label"><span class="status-dot"></span><span id="calendar-status">Der Winterzauber wird vorbereitet …</span></div><span class="timezone">◷ &nbsp; Europe/Berlin</span></div>
+        <div id="preview-banner" class="preview-banner" hidden><strong>Vorschaumodus</strong><span>Alle Türchen sind freigeschaltet. Dein Fortschritt bleibt unverändert.</span><button id="end-preview" class="text-button" type="button">Beenden ×</button></div>
+        <div id="load-error" class="load-error" role="alert" hidden><h2>Die Türchen machen noch Winterschlaf.</h2><p id="load-error-text"></p><button class="button" id="retry-load" type="button">Erneut laden</button></div>
+        <div class="doors-grid" id="doors-grid" aria-label="Türchen 1 bis 24" aria-busy="true"></div>
+        <div class="calendar-bottom"><span>✦ &nbsp; Jeden Tag ein neuer Grund zur Vorfreude.</span><div class="progress-wrapper"><span id="progress-text">0 von 24 geöffnet</span><progress id="calendar-progress" value="0" max="24" aria-label="Geöffnete Türchen">0 von 24</progress></div></div>
+      </div>
+      <div class="scene-caption" aria-hidden="true">Kleine Türchen, große Community.</div>
+    </section>
+
+    <section class="how-it-works" aria-label="So funktioniert’s"><div><span class="step-number">01</span><p><strong>Jeden Tag ein Türchen</strong><span>Ab dem 1. Dezember, um 00:00 Uhr Berliner Zeit.</span></p></div><div><span class="step-number">02</span><p><strong>Überraschung entdecken</strong><span>Klicke auf die Grafik, um sie ganz groß zu sehen.</span></p></div><div><span class="step-number">03</span><p><strong>Gemeinsam freuen</strong><span>Vergangene Türchen bleiben für dich geöffnet.</span></p></div></section>
+  </main>
+  <footer><span class="footer-brand">CreeUnity <span>✧</span> <span id="footer-year">2026</span></span><span>Für die Community. Von der Community. <span class="little-heart">♥</span></span><div><button id="info-button" class="text-button" type="button">Infos & Datenschutz</button><a id="admin-entry" href="?admin=true" hidden>Admin</a></div></footer>
+  <noscript><div class="noscript-message">Bitte aktiviere JavaScript, um den Adventskalender zu öffnen.</div></noscript>
+
+  <!-- Native Dialoge übernehmen Fokusbegrenzung und Tastaturbedienung. -->
+  <dialog id="door-modal" class="door-modal" aria-labelledby="door-title">
+    <div class="modal-header"><div><span class="eyebrow" id="door-eyebrow"></span><h2 id="door-title"></h2></div><button class="icon-button" data-close="door-modal" aria-label="Türchen schließen" type="button">×</button></div>
+    <button id="door-image-button" class="door-image-button" type="button" aria-label="Grafik in Vollbild öffnen"><img id="door-image" alt=""><span class="zoom-hint">⤢ &nbsp; Grafik vergrößern</span></button>
+    <p id="image-error" class="image-error" role="status" hidden>Die Grafik konnte nicht geladen werden. Bitte versuche es später noch einmal.</p>
+    <div id="door-description" class="door-description"></div>
+    <div class="modal-footer"><span>Mit Liebe für die CreeUnity <span class="little-heart">♥</span></span><button class="text-button" data-close="door-modal" type="button">Zurück zum Kalender ↗</button></div>
+  </dialog>
+
+  <dialog id="lightbox" class="lightbox" aria-label="Vollbildansicht der Türchengrafik"><div class="lightbox-toolbar"><span id="lightbox-title">Türchengrafik</span><div><button id="zoom-out" class="icon-button" aria-label="Verkleinern" type="button">−</button><button id="zoom-reset" class="text-button" type="button">Einpassen</button><button id="zoom-in" class="icon-button" aria-label="Vergrößern" type="button">+</button><button class="icon-button" data-close="lightbox" aria-label="Vollbild schließen" type="button">×</button></div></div><div id="lightbox-viewport" class="lightbox-viewport"><img id="lightbox-image" alt=""></div><p class="lightbox-help">Mit + vergrößern, dann scrollen oder wischen · Esc zum Schließen</p></dialog>
+
+  <dialog id="info-modal" class="info-modal" aria-labelledby="info-title"><div class="modal-header"><h2 id="info-title">Gut zu wissen</h2><button class="icon-button" data-close="info-modal" aria-label="Informationen schließen" type="button">×</button></div><div class="info-content"><h3>Ein Dezember voller CreeUnity</h3><p>Jedes Türchen öffnet am jeweiligen Dezembertag um 00:00 Uhr in Europe/Berlin. Frühere Türchen bleiben danach erreichbar.</p><h3>Dein Fortschritt bleibt bei dir</h3><p>Wir speichern die Nummern deiner geöffneten Türchen im lokalen Speicher dieses Browsers. Es gibt kein Tracking und keine Cookies dieser App. Bei extern eingebundenen Bildern erhält deren Anbieter beim Laden technische Verbindungsdaten, etwa deine IP-Adresse. Externe Links öffnen erst nach deinem Klick.</p><button id="reset-progress" class="button button-secondary" type="button">Meinen Fortschritt zurücksetzen</button><p id="storage-note" class="muted"></p><h3>Zur Community</h3><p>Aktuelle Infos und Teilnahmebedingungen zu Aktionen findest du in den jeweiligen Türchen und bei M4sterCree bzw. im Community-Discord.</p></div></dialog>
+
+  <dialog id="admin-modal" class="admin-modal" aria-labelledby="admin-title"><div class="modal-header"><div><span class="eyebrow">CREEUNITY WERKSTATT</span><h2 id="admin-title">Ein bisschen Magie vorbereiten.</h2></div><button class="icon-button" data-close="admin-modal" aria-label="Admin-Bereich schließen" type="button">×</button></div><div class="admin-content"><p class="admin-note">Dieser Editor ist lokal und kein geschützter Login. Auf GitHub Pages sind alle Dateien öffentlich. Änderungen werden erst nach dem Export und Ersetzen von <code>doors-data.json</code> im Repository für alle sichtbar.</p>
+    <form id="admin-form"><fieldset class="settings-grid"><legend>Kalender & Community</legend><label>Kalenderjahr<input id="admin-year" type="number" min="2024" max="2100" required></label><label>Twitch-URL<input id="admin-twitch" type="url" placeholder="https://www.twitch.tv/m4stercree"></label><label>Discord-Einladung (optional)<input id="admin-discord" type="url" placeholder="https://discord.gg/…"></label></fieldset>
+    <div class="preview-control"><label><input type="checkbox" id="preview-toggle"> <strong>Vorschaumodus aktivieren</strong></label><span>Datumsprüfung ausschalten; Öffnungen werden nicht gespeichert.</span></div>
+    <fieldset class="door-editor"><legend>Türchen bearbeiten</legend><div id="admin-door-picker" class="admin-door-picker" aria-label="Türchen auswählen"></div><p class="editing-label" id="editing-label"></p><label>Überschrift<input id="admin-door-title" maxlength="200" required></label><label>Bild-URL oder relativer Dateipfad<input id="admin-door-image" placeholder="./assets/tuerchen1.png" required><small>Relative Pfade funktionieren auch in GitHub-Pages-Projekt-Repositories. Für externe Bilder bitte dauerhafte HTTPS-Links verwenden.</small></label><label>Bildbeschreibung (Barrierefreiheit)<input id="admin-door-alt" maxlength="500"></label><label>Optionaler Text & Links<textarea id="admin-door-text" rows="5" maxlength="10000" placeholder="Deine Nachricht. Links mit https:// werden automatisch anklickbar."></textarea><small>Reiner Text; kein HTML. Vollständige https://-Links werden verlinkt.</small></label><button id="preview-door" type="button" class="button button-secondary">Dieses Türchen ansehen ↗</button></fieldset>
+    <p id="admin-feedback" role="status"></p><div class="admin-actions"><button class="button button-secondary" type="submit">Entwurf lokal speichern</button><button class="button" id="export-config" type="button">JSON herunterladen ↓</button><label class="button button-secondary import-label">JSON importieren<input id="import-config" type="file" accept="application/json,.json"></label><button id="discard-draft" class="text-button" type="button">Veröffentlichte Daten laden</button></div></form>
+  </div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
