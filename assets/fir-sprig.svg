@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" fill="none">
-  <!-- Wiederverwendbarer Tannenzweig: Türkis und Blattgrün aus den Community-Emotes. -->
-  <path d="M20 160Q65 105 156 22" stroke="#478b66" stroke-width="3" stroke-linecap="round"/>
-  <g stroke-linecap="round" stroke-width="4">
-    <path d="m37 140-11-35m12 34 36 3m-23-19-9-39m11 36 39 2m-25-19-5-38m6 35 39-1m-23-16-1-37m3 32 36-4m-19-14 3-29m0 26 29-6m-13-13 5-20m-1 17 22-7" stroke="#48ad9e"/>
-    <path d="m30 148-12-24m27 7 24 2m-11-23-4-24m20 11 25-1m-15-20 1-25m15 11 24-4m-8-16 2-21" stroke="#91cd6c"/>
-  </g>
-  <g fill="#f4dd9e"><circle cx="59" cy="124" r="3"/><circle cx="104" cy="78" r="3"/><circle cx="133" cy="45" r="2.5"/></g>
-</svg>
