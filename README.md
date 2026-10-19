@@ -53,9 +53,58 @@ Beispiel eines Eintrags im privaten Repository:
 }
 ```
 
-Das Gesamtdokument enthält `version: 1`, `year`, `links` mit `twitch` und `discord` sowie genau 24 Einträge unter `doors`. Jeder Tag von 1 bis 24 kommt genau einmal vor. Text kann leer sein; HTML wird nicht ausgeführt. Vollständige HTTPS-Links werden automatisch verlinkt.
+Das Gesamtdokument enthält `version: 1`, `year`, `links` mit `twitch` und `discord` sowie genau 24 Einträge unter `doors`. Jeder Tag von 1 bis 24 kommt genau einmal vor. Text kann leer sein und die unten beschriebenen Formatierungen enthalten. HTML wird nicht ausgeführt. Vollständige HTTPS-Links werden automatisch verlinkt.
 
 Externe HTTPS-Bildlinks sind möglich und werden erst nach Freigabe im öffentlichen JSON sichtbar. Das externe Bild selbst kann jedoch bereits vorher öffentlich abrufbar sein. Für geheim zu haltende Grafiken deshalb lokale Dateien im privaten `images/`-Ordner verwenden. Signierte Discord-CDN-Links können ablaufen.
+
+## Text formatieren
+
+Im Feld **Text & Links** Text markieren und die Schaltflächen **B / I / U / S**, Link oder Code anklicken. Unter **Weitere …** stehen Überschriften, Listen, Checklisten, Zitate, Tabellen, Codeblöcke, Trennlinien, Markierung, Spoiler, Hoch-/Tiefstellung, Ausrichtung und fünf Textfarben bereit. Die **Live-Vorschau** zeigt sofort dieselbe Darstellung wie im geöffneten Türchen. Strg/Cmd+B, I, U und K funktionieren direkt im Textfeld.
+
+Die CreeUnity-Kurzschrift ist an Markdown und Chat-Formatierungen angelehnt, hat aber bewusst `*Text*` als **Fett**. Die Zeichen lassen sich auch direkt schreiben:
+
+```text
+*fett* oder **fett**
+_kursiv_
+__unterstrichen__
+~~durchgestrichen~~
+***fett und kursiv***
+==markiert==
+||Spoiler – per Klick oder Enter aufdecken||
+`Code`
+~tiefgestellt~ und ^hochgestellt^
+[Zum Stream](https://www.twitch.tv/m4stercree)
+
+# Große Überschrift
+## Mittlere Überschrift
+### Kleine Überschrift
+
+- Aufzählung
+  - Unterpunkt
+- [x] Erledigt
+- [ ] Noch offen
+
+1. Erster Schritt
+2. Zweiter Schritt
+
+> Ein Zitat
+
+---
+
+[color=gold]Goldener Text[/color]
+
+[center]
+Zentrierter Text
+[/center]
+
+| Name | Zahl |
+| --- | ---: |
+| CreeUnity | 24 |
+```
+
+Codeblöcke beginnen und enden jeweils mit drei Backticks in einer eigenen Zeile. Verfügbare Farben: `green`, `gold`, `red`, `blue`, `purple`. Ausrichtung: `[left]`, `[center]`, `[right]` mit entsprechender Abschlusszeile. Eine Leerzeile beginnt einen Absatz; normale Zeilenumbrüche bleiben sichtbar. Ein Backslash schützt ein Zeichen vor Formatierung, z. B. `\*Text\*` für sichtbare Sternchen. Im Editor lässt sich die vollständige Übersicht unter **Alle Formatierungen & Schreibweisen** aufklappen.
+
+Die Kurzschrift wird unverändert als normaler Text im privaten Repository gespeichert. Erst die Anzeige erzeugt daraus erlaubte DOM-Elemente; eingegebenes HTML, Skripte und aktive Link-Schemas werden nicht ausgeführt. Formatierungen gelten für den Türchentext, nicht für Überschrift oder Bildbeschreibung.
 
 ## Lokal ansehen
 
@@ -106,6 +155,7 @@ Für echte Gewinnspiele Teilnahmebedingungen und erforderliche Betreiber-/Datens
 index.html, styles.css, script.js   Moderne Website und Web-Editor
 theme.js                          Dunkel-/Hellmodus ohne helles Aufblitzen
 github-editor.js                  Privater GitHub-Zugriff und atomare Speicherung
+text-format.js                    Sichere Textauszeichnung und Editor-Schaltflächen
 doors-data.json                    Automatisch erzeugte öffentliche Tagesinhalte
 assets/                           Winterillustration, Beispiele und freigegebene Bilder
 examples/doors-data.example.json   Öffentliche, ausdrücklich fiktive Beispieldaten

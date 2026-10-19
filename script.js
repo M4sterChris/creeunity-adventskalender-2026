@@ -3,6 +3,7 @@
  * Die tägliche GitHub Action liest die vollständigen Inhalte aus einem privaten Repository.
  */
 import { GitHubEditor, detectImage, privateImagePath } from './github-editor.js';
+import { renderFormattedText, formatSelection } from './text-format.js';
 
 const BERLIN = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit',
@@ -108,7 +109,7 @@ function initialize() {
     $('github-reload').disabled = value;
     $('github-disconnect').disabled = value;
     $('github-token').disabled = value;
-    $('admin-form').querySelectorAll('button,input,textarea').forEach(el => { el.disabled = value; });
+    $('admin-form').querySelectorAll('button,input,textarea,select').forEach(el => { el.disabled = value; });
     $('github-save').disabled = value || !repository;
   }
   async function resolveDoorImage(door) {
@@ -257,23 +258,6 @@ function initialize() {
     $('preview-banner').hidden = !state.preview;
   }
 
-  // Text bleibt Text. Links werden als sichere DOM-Knoten eingesetzt, nie über innerHTML.
-  function renderText(text, target) {
-    target.replaceChildren();
-    const pattern = /https?:\/\/[^\s<>"']+/gi;
-    let offset = 0;
-    for (const match of text.matchAll(pattern)) {
-      target.append(document.createTextNode(text.slice(offset, match.index)));
-      const raw = match[0].replace(/[.,;!?)\]]+$/, '');
-      const url = safeUrl(raw);
-      if (url) { const link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = raw; target.append(link); }
-      else target.append(document.createTextNode(raw));
-      target.append(document.createTextNode(match[0].slice(raw.length)));
-      offset = match.index + match[0].length;
-    }
-    target.append(document.createTextNode(text.slice(offset)));
-  }
-
   async function openDoor(day, trigger) {
     if (!state.config) return;
     const door = state.config.doors.find(item => item.day === day);
@@ -301,7 +285,7 @@ function initialize() {
     $('image-error').hidden = Boolean(image);
     if (image) $('door-image').src = image;
     else $('door-image').removeAttribute('src');
-    renderText(door.text, $('door-description'));
+    renderFormattedText(door.text, $('door-description'));
     if (!state.preview) {
       state.opened.add(day);
       const stored = writeStorage(progressKey(), JSON.stringify([...state.opened]));
@@ -397,6 +381,7 @@ function initialize() {
     $('admin-door-image').value = door.image;
     $('admin-door-alt').value = door.alt;
     $('admin-door-text').value = door.text;
+    updateTextPreview();
     $('admin-door-picker').querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.day) === door.day)));
     updateEditorImage();
   }
@@ -421,6 +406,35 @@ function initialize() {
     const button = event.target.closest('button');
     if (!button) return;
     captureEditor(); state.selectedDay = Number(button.dataset.day); showEditorDoor();
+  });
+  function updateTextPreview() {
+    const text = $('admin-door-text').value;
+    renderFormattedText(text, $('admin-text-preview'));
+    $('text-preview-empty').hidden = Boolean(text.trim());
+  }
+  function applyTextFormat(action) {
+    if (githubBusy) return;
+    const input = $('admin-door-text');
+    const result = formatSelection(input.value, action, input.selectionStart, input.selectionEnd);
+    if (result.value.length > input.maxLength) { feedback('Der Text darf einschließlich Formatierungszeichen maximal 10.000 Zeichen enthalten.'); return; }
+    input.value = result.value;
+    input.focus({ preventScroll: true });
+    input.setSelectionRange(result.start, result.end);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  $('admin-door-text').addEventListener('input', updateTextPreview);
+  $('text-format-toolbar').addEventListener('click', event => {
+    const button = event.target.closest('button[data-format]');
+    if (button) applyTextFormat(button.dataset.format);
+  });
+  $('text-format-extra').addEventListener('change', event => {
+    if (event.target.value) applyTextFormat(event.target.value);
+    event.target.value = '';
+  });
+  $('admin-door-text').addEventListener('keydown', event => {
+    if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+    const action = { b: 'bold', i: 'italic', u: 'underline', k: 'link' }[event.key.toLowerCase()];
+    if (action) { event.preventDefault(); applyTextFormat(action); }
   });
   function setPreview(enabled) {
     state.preview = Boolean(enabled && adminAccess);

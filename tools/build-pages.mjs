@@ -6,7 +6,7 @@ const root = resolve('.');
 const out = resolve(root, '_site');
 await mkdir(out, { recursive: true });
 if ((await readdir(out)).length) throw new Error('_site muss vor dem Build leer sein.');
-for (const name of ['index.html', 'styles.css', 'script.js', 'theme.js', 'github-editor.js', 'doors-data.json', '.nojekyll']) {
+for (const name of ['index.html', 'styles.css', 'script.js', 'theme.js', 'github-editor.js', 'text-format.js', 'doors-data.json', '.nojekyll']) {
   if (!(await lstat(join(root, name))).isFile()) throw new Error('Eine öffentliche Datei ist ungültig.');
   await cp(join(root, name), join(out, name));
 }
