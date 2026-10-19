@@ -1,6 +1,6 @@
 /* CreeUnity Adventskalender – Vanilla JS, ohne Build-Schritt.
- * Öffentliche Konfiguration: doors-data.json. Kein Passwort kann statische Dateien schützen.
- * Für verlässliche Sperren gegen Manipulation wäre ein Backend mit Serverzeit nötig.
+ * Die öffentliche Konfiguration enthält nur bereits veröffentlichte Tagesinhalte.
+ * Die tägliche GitHub Action liest die vollständigen Inhalte aus einem privaten Repository.
  */
 const BERLIN = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit',
@@ -50,13 +50,16 @@ export function validateConfig(input) {
     if (!safeUrl(door.image, { image: true })) throw new Error(`Türchen ${door.day}: Bitte einen relativen Bildpfad oder eine HTTPS-Bild-URL eingeben.`);
     if (typeof door.text !== 'string' || door.text.length > 10000) throw new Error(`Türchen ${door.day}: Der Text darf maximal 10.000 Zeichen enthalten.`);
     if (door.alt != null && (typeof door.alt !== 'string' || door.alt.length > 500)) throw new Error(`Türchen ${door.day}: Die Bildbeschreibung darf maximal 500 Zeichen enthalten.`);
-    return { day: door.day, title: door.title.trim(), image: door.image.trim(), alt: door.alt || '', text: door.text };
+    if (input.releaseMode === 'daily' && typeof door.released !== 'boolean') throw new Error(`Türchen ${door.day}: Die Veröffentlichungsangabe fehlt.`);
+    return { day: door.day, title: door.title.trim(), image: door.image.trim(), alt: door.alt || '', text: door.text,
+      ...(input.releaseMode === 'daily' ? { released: door.released } : {}) };
   }).sort((a, b) => a.day - b.day);
   const links = input.links || {};
   for (const name of ['twitch', 'discord']) {
     if (links[name] && !safeUrl(links[name])) throw new Error(`Bitte eine gültige HTTPS-URL für ${name} eingeben.`);
   }
-  return { version: 1, year: input.year, links: { twitch: links.twitch || '', discord: links.discord || '' }, doors };
+  return { version: 1, year: input.year, links: { twitch: links.twitch || '', discord: links.discord || '' },
+    ...(input.releaseMode === 'daily' ? { releaseMode: 'daily' } : {}), doors };
 }
 
 // Der DOM-Teil wird beim Import durch Node-Tests nicht ausgeführt.
@@ -71,6 +74,8 @@ function initialize() {
   let lastRender = '';
   let toastTimeout;
   let resetArmed = false;
+  let refreshing = false;
+  let refreshTime = 0;
 
   // Speicher ist optional: Privatmodus/volle Quota dürfen den Kalender nicht lahmlegen.
   function readStorage(key, session = false) {
@@ -153,7 +158,7 @@ function initialize() {
     const berlin = getBerlinDateParts(now);
     const december = berlin.year === year && berlin.month === 12;
     // Kein sekündlicher DOM-Austausch: Tastaturfokus und Screenreader bleiben stabil.
-    const signature = JSON.stringify([year, berlin, state.preview, [...state.opened]]);
+    const signature = JSON.stringify([year, berlin, state.preview, [...state.opened], state.config.doors.map(d => d.released)]);
     if (signature === lastRender) return;
     lastRender = signature;
     $('calendar-status').textContent = state.preview ? 'Die CreeUnity-Werkstatt ist geöffnet'
@@ -163,7 +168,7 @@ function initialize() {
     const fragment = document.createDocumentFragment();
     for (const door of state.config.doors) {
       const opened = state.opened.has(door.day);
-      const unlocked = isDoorUnlocked(door.day, year, now);
+      const unlocked = isDoorUnlocked(door.day, year, now) && door.released !== false;
       const today = december && berlin.day === door.day;
       const button = document.createElement('button');
       button.type = 'button';
@@ -205,12 +210,18 @@ function initialize() {
     target.append(document.createTextNode(text.slice(offset)));
   }
 
-  function openDoor(day, trigger) {
+  async function openDoor(day, trigger) {
     if (!state.config) return;
     const door = state.config.doors.find(item => item.day === day);
     if (!door) return;
     if (!state.preview && !isDoorUnlocked(day, state.config.year)) {
       toast(`Noch ein bisschen Vorfreude! Türchen ${day} öffnet am ${day}. Dezember ${state.config.year} um 00:00 Uhr (Europe/Berlin). ✨`);
+      return;
+    }
+    if (!state.preview && door.released === false) {
+      // Eine laufende Seite holt den aktuellen Stand nach, auch nach dem Tageswechsel.
+      if (await refreshPublicConfiguration()) return openDoor(day, trigger);
+      toast('Die heutige Überraschung wird gerade vorbereitet. Schau gleich noch einmal vorbei – sie erscheint hier automatisch. ✨');
       return;
     }
     state.activeDay = day;
@@ -355,7 +366,7 @@ function initialize() {
   $('admin-form').addEventListener('submit', event => {
     event.preventDefault();
     if (!applyEditor()) return;
-    feedback(writeStorage(DRAFT_KEY, JSON.stringify(state.config)) ? 'Entwurf in diesem Browser gespeichert. Für die Veröffentlichung JSON herunterladen und im Repository ersetzen.' : 'Lokaler Speicher ist nicht verfügbar. Bitte sichere deinen Entwurf mit „JSON herunterladen“.');
+    feedback(writeStorage(DRAFT_KEY, JSON.stringify(state.config)) ? 'Entwurf nur in diesem Browser gespeichert. Exportierte Inhalte gehören ausschließlich in das private Inhalte-Repository.' : 'Lokaler Speicher ist nicht verfügbar. Bitte sichere deinen Entwurf mit „JSON herunterladen“.');
   });
   $('export-config').addEventListener('click', () => {
     if (!applyEditor()) return;
@@ -364,7 +375,7 @@ function initialize() {
     const link = document.createElement('a'); link.href = url; link.download = 'doors-data.json';
     document.body.append(link); link.click(); link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    feedback('JSON exportiert. Ersetze doors-data.json im GitHub-Repository durch diese Datei.');
+    feedback('JSON exportiert. Ersetze doors-data.json ausschließlich im privaten Inhalte-Repository. Niemals vollständige Inhalte ins öffentliche Repository hochladen.');
   });
   $('import-config').addEventListener('change', async event => {
     const file = event.target.files[0];
@@ -403,9 +414,28 @@ function initialize() {
     }
   });
   $('retry-load').addEventListener('click', loadConfiguration);
+  async function refreshPublicConfiguration() {
+    if (adminAccess || refreshing || !state.config || Date.now() - refreshTime < 10000) return false;
+    refreshing = true; refreshTime = Date.now();
+    try {
+      const response = await fetch(`./doors-data.json?t=${Date.now()}`, { cache: 'no-store' });
+      if (!response.ok) return false;
+      const config = validateConfig(await response.json());
+      const changed = JSON.stringify(config) !== JSON.stringify(state.published);
+      if (changed) {
+        const yearChanged = state.config.year !== config.year;
+        state.published = structuredClone(config); state.config = config;
+        if (yearChanged) readProgress();
+        updateLinks(); renderCalendar();
+      }
+      return changed;
+    } catch { return false; }
+    finally { refreshing = false; }
+  }
   // Neuer Tag, Rückkehr aus Standby und Änderungen in einem anderen Tab.
   setInterval(renderCalendar, 1000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) renderCalendar(); });
+  setInterval(() => { if (!document.hidden) refreshPublicConfiguration(); }, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { renderCalendar(); refreshPublicConfiguration(); } });
   window.addEventListener('storage', event => { if (state.config && event.key === progressKey()) { readProgress(); renderCalendar(); } });
   loadConfiguration();
 }

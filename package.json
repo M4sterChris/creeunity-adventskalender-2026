@@ -6,7 +6,10 @@
   "description": "Buildfreier CreeUnity Adventskalender für GitHub Pages",
   "scripts": {
     "start": "node tools/serve.mjs",
-    "test": "node --test tests/calendar.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "prepare:private": "node tools/prepare-private-repository.mjs",
+    "preview:private": "node tools/serve.mjs --private",
+    "build:pages": "node tools/build-pages.mjs"
   },
   "engines": { "node": ">=20" }
 }

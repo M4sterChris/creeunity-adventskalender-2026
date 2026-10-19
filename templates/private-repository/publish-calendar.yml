@@ -1,0 +1,53 @@
+# Diese Datei gehört nach .github/workflows/ im PRIVATEN Inhalte-Repository.
+name: Tagesinhalte freigeben
+
+on:
+  schedule:
+    # Im Dezember: UTC+1. Erster Lauf um 00:03 Berlin, weitere Läufe holen Ausfälle nach.
+    - cron: '3,18,43 23 * 11,12 *'
+    - cron: '13 0 * 12 *'
+  push:
+    branches: [main]
+    paths: ['doors-data.json', 'images/**', '.github/workflows/publish-calendar.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: calendar-publication
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Private Inhalte laden
+        uses: actions/checkout@v6
+        with:
+          path: private
+          persist-credentials: false
+      - name: Öffentliche Website laden
+        uses: actions/checkout@v6
+        with:
+          repository: M4sterChris/creeunity-adventskalender-2026
+          ref: main
+          path: website
+          ssh-key: ${{ secrets.WEBSITE_DEPLOY_KEY }}
+      - name: Nur freigegebene Tage und deren Bilder übernehmen
+        run: node website/tools/publish-doors.mjs --source "$GITHUB_WORKSPACE/private" --target "$GITHUB_WORKSPACE/website"
+      - name: Freigegebene Inhalte veröffentlichen
+        working-directory: website
+        shell: bash
+        run: |
+          git config user.name 'CreeUnity Calendar'
+          git config user.email 'calendar@users.noreply.github.com'
+          git add -- doors-data.json
+          if [ -d assets/released ]; then git add -- assets/released; fi
+          if git diff --cached --quiet; then
+            echo 'Keine neuen Inhalte freizugeben.'
+            exit 0
+          fi
+          git commit -m 'Publish available Advent calendar doors'
+          git push origin HEAD:main

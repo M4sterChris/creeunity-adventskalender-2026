@@ -2,3 +2,9 @@ node_modules/
 .qa/
 *.log
 CreeUnity-Adventskalender.zip
+.private-repository/
+_site/
+.env
+.env.*
+*.pem
+*.key

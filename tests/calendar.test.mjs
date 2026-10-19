@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { getBerlinDateParts, isDoorUnlocked, validateConfig, safeUrl } from '../script.js';
 
-const config = JSON.parse(await readFile(new URL('../doors-data.json', import.meta.url), 'utf8'));
+const config = JSON.parse(await readFile(new URL('../examples/doors-data.example.json', import.meta.url), 'utf8'));
 
 test('Berliner Tag wechselt im Winter um 23:00 UTC', () => {
   assert.deepEqual(getBerlinDateParts(new Date('2026-11-30T22:59:59Z')), { day: 30, month: 11, year: 2026 });
