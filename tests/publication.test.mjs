@@ -7,6 +7,7 @@ import { selectReleasedContents, publishDoors, localImagePath } from '../tools/p
 const example = JSON.parse(await readFile(new URL('../examples/doors-data.example.json', import.meta.url), 'utf8'));
 const privateData = () => ({ ...structuredClone(example), doors: example.doors.map(door => ({ ...door,
   title: `GEHEIM-TITEL-${door.day}`, text: `GEHEIM-TEXT-${door.day}`, alt: `GEHEIM-ALT-${door.day}`, image: `./images/geheim-${door.day}.svg`,
+  puzzle: door.day % 2 ? { type: 'number', answer: String(door.day), fragment: `GEHEIM-BUCHSTABEN-${door.day}` } : { type: 'letters', answer: `GEHEIM-LOESUNG-${door.day}` },
 })) });
 
 test('Vor dem 1. Dezember werden keinerlei private Inhalte exportiert', () => {

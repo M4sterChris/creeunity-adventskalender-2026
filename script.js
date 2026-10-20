@@ -4,6 +4,7 @@
  */
 import { GitHubEditor, detectImage, privateImagePath } from './github-editor.js';
 import { renderFormattedText, formatSelection } from './text-format.js';
+import { validatePuzzle, puzzleIdentity, checkPuzzleAnswer } from './puzzles.js';
 
 const BERLIN = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit',
@@ -66,7 +67,10 @@ export function validateConfig(input) {
     if (typeof door.text !== 'string' || door.text.length > 10000) throw new Error(`Türchen ${door.day}: Der Text darf maximal 10.000 Zeichen enthalten.`);
     if (door.alt != null && (typeof door.alt !== 'string' || door.alt.length > 500)) throw new Error(`Türchen ${door.day}: Die Bildbeschreibung darf maximal 500 Zeichen enthalten.`);
     if (input.releaseMode === 'daily' && typeof door.released !== 'boolean') throw new Error(`Türchen ${door.day}: Die Veröffentlichungsangabe fehlt.`);
+    let puzzle;
+    try { puzzle = validatePuzzle(door.puzzle); } catch (error) { throw new Error(`Türchen ${door.day}: ${error.message}`); }
     return { day: door.day, title: door.title.trim(), image: door.image.trim(), alt: door.alt || '', text: door.text,
+      ...(puzzle ? { puzzle } : {}),
       ...(input.releaseMode === 'daily' ? { released: door.released } : {}) };
   }).sort((a, b) => a.day - b.day);
   const links = input.links || {};
@@ -84,10 +88,11 @@ function initialize() {
   const $ = id => document.getElementById(id);
   const adminAccess = new URLSearchParams(location.search).get('admin') === 'true';
   // Designvorschau lädt ausschließlich öffentliche Inhalte und benötigt keinen Zugangsschlüssel.
-  const designPreview = new URLSearchParams(location.search).get('preview') === 'design';
+  const puzzleDemo = new URLSearchParams(location.search).get('preview') === 'puzzle';
+  const designPreview = puzzleDemo || new URLSearchParams(location.search).get('preview') === 'design';
   const DRAFT_KEY = 'creeunity:admin-draft:v1';
   const PREVIEW_KEY = 'creeunity:preview:v1';
-  const state = { config: null, editor: null, published: null, opened: new Set(), previewOpened: new Set(), selectedDay: 1, preview: false, storageOK: true, zoom: 1, activeDay: null };
+  const state = { config: null, editor: null, published: null, opened: new Set(), previewOpened: new Set(), solved: {}, previewSolved: {}, selectedDay: 1, preview: false, storageOK: true, zoom: 1, activeDay: null };
   let lastRender = '';
   let toastTimeout;
   let resetArmed = false;
@@ -192,12 +197,21 @@ function initialize() {
   }
   function feedback(message) { $('admin-feedback').textContent = message; }
   const progressKey = () => `creeunity:opened:${state.config.year}`;
+  const solvedKey = () => `creeunity:solved:${state.config.year}`;
 
   function readProgress() {
     try {
       const saved = JSON.parse(readStorage(progressKey()) || '[]');
       state.opened = new Set(Array.isArray(saved) ? saved.filter(n => Number.isInteger(n) && n >= 1 && n <= 24) : []);
     } catch { state.opened = new Set(); }
+    try {
+      const saved = JSON.parse(readStorage(solvedKey()) || '{}');
+      state.solved = {};
+      for (let day = 1; day <= 24; day++) {
+        const record = saved?.[day];
+        if (record && typeof record.identity === 'string' && record.identity.length <= 1000 && typeof record.fragment === 'string' && record.fragment.length <= 120) state.solved[day] = record;
+      }
+    } catch { state.solved = {}; }
   }
 
   async function loadConfiguration() {
@@ -218,6 +232,11 @@ function initialize() {
       if (designPreview) {
         state.preview = true;
         state.previewOpened = new Set([1, 5, 12]);
+      }
+      if (puzzleDemo) {
+        // Ausschließlich erfundene Beispielrätsel; niemals echte zukünftige Inhalte ergänzen.
+        Object.assign(state.config.doors[0], { title: 'Beispielrätsel · Türchen 1', image: './assets/door-surprise.svg', text: 'DEMO: Wie viele Türchen hat dieser Adventskalender? Gib die Zahl ein.', puzzle: { type: 'number', answer: '24', fragment: 'FRO' } });
+        Object.assign(state.config.doors[4], { title: 'Beispielrätsel · Türchen 5', image: './assets/emotes/piepLove.png', text: 'DEMO: Die heutige Buchstabenfolge lautet HE. Teste unten die Prüfung.', puzzle: { type: 'letters', answer: 'HE' } });
       }
       readProgress();
       updateLinks();
@@ -250,6 +269,27 @@ function initialize() {
     document.title = `CreeUnity Adventskalender · ${state.config.year}`;
   }
 
+  function solvedPuzzles() {
+    const records = state.preview ? state.previewSolved : state.solved;
+    return state.config.doors.filter(door => door.puzzle && (state.preview || (isDoorUnlocked(door.day, state.config.year) && door.released !== false)) && records[door.day]?.identity === puzzleIdentity(door.puzzle));
+  }
+
+  function renderPuzzleCollection(solved) {
+    const enabled = state.config.doors.some(door => door.puzzle && (state.preview || (isDoorUnlocked(door.day, state.config.year) && door.released !== false)));
+    $('puzzle-collection').hidden = !enabled;
+    $('solved-progress').textContent = `${state.preview ? 'Vorschau: ' : ''}${solved.length} von 24 Rätseln gelöst`;
+    const records = state.preview ? state.previewSolved : state.solved;
+    $('puzzle-fragments').replaceChildren();
+    for (let day = 1; day <= 24; day++) {
+      const item = document.createElement('div');
+      const done = solved.some(door => door.day === day);
+      item.className = `puzzle-fragment${done ? ' is-collected' : ''}`;
+      const label = document.createElement('span'); label.textContent = String(day);
+      const fragment = document.createElement('strong'); fragment.textContent = done ? records[day].fragment : '…';
+      item.append(label, fragment); $('puzzle-fragments').append(item);
+    }
+  }
+
   function renderCalendar() {
     if (!state.config) return;
     const { year } = state.config;
@@ -258,7 +298,8 @@ function initialize() {
     const december = berlin.year === year && berlin.month === 12;
     // Kein sekündlicher DOM-Austausch: Tastaturfokus und Screenreader bleiben stabil.
     const visibleOpened = state.preview ? state.previewOpened : state.opened;
-    const signature = JSON.stringify([year, berlin, state.preview, [...visibleOpened], state.config.doors.map(d => [d.released, d.image])]);
+    const solved = solvedPuzzles();
+    const signature = JSON.stringify([year, berlin, state.preview, [...visibleOpened], solved.map(d => d.day), state.config.doors.map(d => [d.released, d.image, puzzleIdentity(d.puzzle)])]);
     if (signature === lastRender) return;
     lastRender = signature;
     $('calendar-status').textContent = state.preview ? 'Die CreeUnity-Werkstatt ist geöffnet'
@@ -275,7 +316,8 @@ function initialize() {
       button.type = 'button';
       button.className = `door${opened ? ' is-opened' : ''}${today ? ' is-today' : ''}${door.day === 24 ? ' is-finale' : ''}`;
       button.dataset.day = door.day;
-      button.setAttribute('aria-label', `Türchen ${door.day}${opened ? ', bereits geöffnet' : ''}${today ? ', heute' : ''}${!unlocked && !state.preview ? `, öffnet am ${door.day}. Dezember ${year}` : ''}`);
+      const isSolved = solved.some(item => item.day === door.day);
+      button.setAttribute('aria-label', `Türchen ${door.day}${opened ? ', bereits geöffnet' : ''}${isSolved ? ', Rätsel gelöst' : ''}${today ? ', heute' : ''}${!unlocked && !state.preview ? `, öffnet am ${door.day}. Dezember ${year}` : ''}`);
       // Gesperrte Türchen bleiben bedienbar, damit die freundliche Nachricht erreichbar ist.
       const ornament = document.createElement('span');
       ornament.className = 'door-decoration'; ornament.setAttribute('aria-hidden', 'true');
@@ -289,6 +331,7 @@ function initialize() {
       const reveal = document.createElement('span'); reveal.className = 'door-reveal'; reveal.setAttribute('aria-hidden', 'true');
       if (opened) renderDoorThumbnail(door, reveal, state.preview || unlocked);
       button.append(reveal, leaf);
+      if (isSolved) { const badge = document.createElement('span'); badge.className = 'door-solved'; badge.textContent = '✓'; badge.setAttribute('aria-hidden', 'true'); button.append(badge); }
       if (today) { const tag = document.createElement('span'); tag.className = 'today-tag'; tag.textContent = 'HEUTE'; button.append(tag); }
       fragment.append(button);
     }
@@ -297,12 +340,63 @@ function initialize() {
     $('calendar-progress').value = visibleOpened.size;
     $('calendar-progress').textContent = `${visibleOpened.size} von 24`;
     $('preview-banner').hidden = !state.preview;
-    $('preview-title').textContent = designPreview ? 'Designvorschau' : 'Vorschaumodus';
-    $('preview-note').textContent = designPreview
+    renderPuzzleCollection(solved);
+    $('preview-title').textContent = puzzleDemo ? 'Rätsel-Demo' : designPreview ? 'Designvorschau' : 'Vorschaumodus';
+    $('preview-note').textContent = puzzleDemo ? 'Erfundene Beispiele: Türchen 1 → Zahl 24, Türchen 5 → Buchstaben HE. Testlösungen werden nicht gespeichert.' : designPreview
       ? 'Beispielöffnungen zum Vergleichen. Zukünftige Inhalte bleiben Platzhalter. Dein echter Fortschritt bleibt unverändert.'
       : 'Öffne und schließe ein Türchen, um seinen geöffneten Zustand zu sehen. Dein echter Fortschritt bleibt unverändert.';
     $('reset-preview').textContent = visibleOpened.size ? 'Vorschau zurücksetzen' : 'Beispielöffnungen zeigen';
   }
+
+  function renderActivePuzzle() {
+    const door = state.config.doors.find(item => item.day === state.activeDay);
+    const available = door && (state.preview || (isDoorUnlocked(door.day, state.config.year) && door.released !== false));
+    $('door-puzzle').hidden = !available || !door.puzzle;
+    $('puzzle-answer').value = '';
+    $('puzzle-answer').removeAttribute('aria-invalid');
+    $('puzzle-feedback').textContent = '';
+    $('puzzle-feedback').className = 'puzzle-feedback';
+    if (!available || !door.puzzle) return;
+    const number = door.puzzle.type === 'number';
+    $('puzzle-answer-label').textContent = number ? 'Deine Zahl' : 'Deine Buchstabenfolge';
+    $('puzzle-answer').inputMode = number ? 'decimal' : 'text';
+    $('puzzle-answer').placeholder = number ? 'Zahl eingeben' : 'Buchstaben eingeben';
+    const done = solvedPuzzles().some(item => item.day === door.day);
+    $('puzzle-form').hidden = done;
+    if (done) {
+      $('puzzle-feedback').textContent = number ? `✓ Richtig! Die heutige Buchstabenfolge ist ${door.puzzle.fragment}` : '✓ Richtig!';
+      $('puzzle-feedback').classList.add('is-correct');
+    }
+  }
+
+  $('puzzle-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    if ($('puzzle-check').disabled) return;
+    const day = state.activeDay;
+    const door = state.config.doors.find(item => item.day === day);
+    if (!door?.puzzle || (!state.preview && (!isDoorUnlocked(day, state.config.year) || door.released === false))) return;
+    const year = state.config.year;
+    const preview = state.preview;
+    const identity = puzzleIdentity(door.puzzle);
+    $('puzzle-check').disabled = true;
+    try {
+      const result = await checkPuzzleAnswer(door.puzzle, $('puzzle-answer').value, year, day);
+      if (state.activeDay !== day || state.config.year !== year || state.preview !== preview || puzzleIdentity(state.config.doors.find(item => item.day === day)?.puzzle) !== identity) return;
+      if (!result.correct) {
+        $('puzzle-feedback').textContent = 'Noch nicht ganz – versuch es noch einmal.';
+        $('puzzle-answer').setAttribute('aria-invalid', 'true');
+        return;
+      }
+      const records = preview ? state.previewSolved : state.solved;
+      records[day] = { identity, fragment: result.fragment };
+      const stored = preview || writeStorage(solvedKey(), JSON.stringify(state.solved));
+      renderCalendar(); renderActivePuzzle();
+      if (!stored) $('puzzle-feedback').textContent += ' Für diesen Besuch gemerkt; dein Browser blockiert die Speicherung.';
+    } catch {
+      $('puzzle-feedback').textContent = 'Die Prüfung ist gerade nicht verfügbar. Bitte lade die Seite über HTTPS neu.';
+    } finally { $('puzzle-check').disabled = false; }
+  });
+  $('puzzle-answer').addEventListener('input', () => $('puzzle-answer').removeAttribute('aria-invalid'));
 
   async function openDoor(day, trigger) {
     if (!state.config) return;
@@ -332,6 +426,7 @@ function initialize() {
     if (image) $('door-image').src = image;
     else $('door-image').removeAttribute('src');
     renderFormattedText(door.text, $('door-description'));
+    renderActivePuzzle();
     let stored = true;
     if (state.preview) {
       // Vorschau-Öffnungen leben nur im Arbeitsspeicher, niemals im echten Fortschritt.
@@ -403,7 +498,10 @@ function initialize() {
     if (!state.config) return;
     if (!resetArmed) { resetArmed = true; $('reset-progress').textContent = 'Wirklich zurücksetzen? Erneut klicken'; return; }
     state.opened.clear();
-    const stored = writeStorage(progressKey(), null);
+    state.solved = {};
+    const openedStored = writeStorage(progressKey(), null);
+    const solvedStored = writeStorage(solvedKey(), null);
+    const stored = openedStored && solvedStored;
     renderCalendar();
     resetArmed = false;
     $('reset-progress').textContent = 'Meinen Fortschritt zurücksetzen';
@@ -434,6 +532,10 @@ function initialize() {
     $('admin-door-image').value = door.image;
     $('admin-door-alt').value = door.alt;
     $('admin-door-text').value = door.text;
+    $('admin-puzzle-type').value = door.puzzle?.type || '';
+    $('admin-puzzle-answer').value = door.puzzle?.answer || '';
+    $('admin-puzzle-fragment').value = door.puzzle?.fragment || '';
+    updatePuzzleEditor();
     updateTextPreview();
     $('admin-door-picker').querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.day) === door.day)));
     updateEditorImage();
@@ -441,6 +543,13 @@ function initialize() {
   function captureEditor() {
     const door = state.editor.doors.find(item => item.day === state.selectedDay);
     Object.assign(door, { title: $('admin-door-title').value, image: $('admin-door-image').value, alt: $('admin-door-alt').value, text: $('admin-door-text').value });
+    const type = $('admin-puzzle-type').value;
+    if (!type) delete door.puzzle;
+    else {
+      const answer = $('admin-puzzle-answer').value;
+      const previousHash = door.puzzle?.type === type ? door.puzzle.answerHash : undefined;
+      door.puzzle = { type, ...(!answer && previousHash ? { answerHash: previousHash } : { answer }), ...(type === 'number' ? { fragment: $('admin-puzzle-fragment').value } : {}) };
+    }
     state.editor.year = Number($('admin-year').value);
     state.editor.links = { twitch: $('admin-twitch').value.trim(), discord: $('admin-discord').value.trim() };
   }
@@ -465,6 +574,17 @@ function initialize() {
     renderFormattedText(text, $('admin-text-preview'));
     $('text-preview-empty').hidden = Boolean(text.trim());
   }
+  function updatePuzzleEditor() {
+    const type = $('admin-puzzle-type').value;
+    $('admin-puzzle-fields').hidden = !type;
+    $('admin-puzzle-fragment-label').hidden = type !== 'number';
+    $('admin-puzzle-answer').inputMode = type === 'number' ? 'decimal' : 'text';
+    const door = state.editor?.doors.find(item => item.day === state.selectedDay);
+    $('admin-puzzle-help').textContent = door?.puzzle?.answerHash
+      ? 'Die öffentliche Datei enthält nur einen Prüfwert. Verbinde den privaten Kalender, um die gespeicherte Lösung zu bearbeiten.'
+      : 'Zahl: richtige Eingabe gibt die Buchstabenfolge frei. Buchstabenfolge: richtige Eingabe bestätigt „Richtig!“. Groß-/Kleinschreibung und Leerzeichen in Buchstabenfolgen werden ignoriert.';
+  }
+  $('admin-puzzle-type').addEventListener('change', updatePuzzleEditor);
   function applyTextFormat(action) {
     if (githubBusy) return;
     const input = $('admin-door-text');
@@ -493,6 +613,8 @@ function initialize() {
     state.preview = Boolean(enabled && (adminAccess || designPreview));
     if (!state.preview) {
       state.previewOpened.clear();
+      state.previewSolved = {};
+      if (puzzleDemo) { state.config = structuredClone(state.published); updateLinks(); }
       if (designPreview) {
         const url = new URL(location.href);
         url.searchParams.delete('preview');
@@ -512,6 +634,7 @@ function initialize() {
   $('reset-preview').addEventListener('click', () => {
     if (!state.preview) return;
     state.previewOpened = state.previewOpened.size ? new Set() : new Set([1, 5, 12]);
+    state.previewSolved = {};
     renderCalendar();
   });
   $('admin-form').addEventListener('submit', event => {
@@ -594,6 +717,7 @@ function initialize() {
       repository = candidate;
       clearPrivateImages();
       state.config = config; state.selectedDay = 1;
+      state.previewSolved = {};
       state.preview = true;
       writeStorage(PREVIEW_KEY, 'true', true);
       readProgress(); updateLinks(); populateAdmin(); renderCalendar();
@@ -628,9 +752,11 @@ function initialize() {
     clearPrivateImages();
     state.config = structuredClone(state.published); state.preview = false; state.selectedDay = 1;
     state.previewOpened.clear();
+    state.previewSolved = {};
     writeStorage(PREVIEW_KEY, 'false', true);
     readProgress(); updateLinks(); populateAdmin(); renderCalendar();
     $('door-title').textContent = ''; $('door-description').replaceChildren();
+    $('door-puzzle').hidden = true; $('puzzle-answer').value = ''; $('puzzle-feedback').textContent = '';
     $('door-image').removeAttribute('src'); $('admin-image-preview').removeAttribute('src'); $('admin-image-preview').hidden = true;
     $('github-login').hidden = false; $('github-connected').hidden = true;
     githubStatus('Abgemeldet. Ein ausdrücklich lokal gespeicherter Entwurf bleibt in diesem Browser erhalten.');
@@ -658,7 +784,9 @@ function initialize() {
       const changed = JSON.stringify(config) !== JSON.stringify(state.published);
       if (changed) {
         const yearChanged = state.config.year !== config.year;
-        state.published = structuredClone(config); state.config = config;
+        state.published = structuredClone(config);
+        if (puzzleDemo && state.preview) return false;
+        state.config = config;
         if (yearChanged) readProgress();
         updateLinks(); renderCalendar();
       }
@@ -670,6 +798,6 @@ function initialize() {
   setInterval(renderCalendar, 1000);
   setInterval(() => { if (!document.hidden) refreshPublicConfiguration(); }, 60000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { renderCalendar(); refreshPublicConfiguration(); } });
-  window.addEventListener('storage', event => { if (state.config && event.key === progressKey()) { readProgress(); renderCalendar(); } });
+  window.addEventListener('storage', event => { if (state.config && [progressKey(), solvedKey()].includes(event.key)) { readProgress(); renderCalendar(); if ($('door-modal').open) renderActivePuzzle(); } });
   loadConfiguration();
 }

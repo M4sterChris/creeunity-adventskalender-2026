@@ -253,6 +253,23 @@ html[data-theme=dark] .twitch-link{border-color:#48ad9e55}
 .preview-banner>span{flex:1 1 250px;line-height:1.6}
 .preview-banner #reset-preview{margin-left:0}
 .preview-control>a{display:inline-block;margin:12px 0 0 24px;font-weight:600}
+
+/* Tagesrätsel: geöffnet und gelöst bleiben zwei getrennte Zustände. */
+.door-solved{position:absolute;z-index:4;right:8px;top:8px;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:1px solid #caff9e;background:#163c28;color:#caff9e;font-size:17px;font-weight:800;box-shadow:0 2px 8px #0006;pointer-events:none}
+.door-puzzle{margin:0 26px 24px;padding:20px;border:1px solid var(--line);border-radius:12px;background:#72b65d0b}
+.door-puzzle h3{margin:0 0 14px;font-size:17px;letter-spacing:-.3px}
+.puzzle-form{display:flex;gap:12px;align-items:flex-end}.puzzle-form label{flex:1;min-width:0}.puzzle-form .button{min-height:43px;flex-shrink:0}
+.puzzle-feedback{font-size:14px;line-height:1.8;margin:12px 0 0;overflow-wrap:anywhere}.puzzle-feedback:empty{display:none}.puzzle-feedback.is-correct{color:#387329;font-weight:650}
+.puzzle-editor select{max-width:100%;font:inherit;padding:10px 12px;border-radius:6px;border:1px solid var(--line);color:var(--ink);background:var(--cream)}
+#admin-puzzle-fields>label{margin-top:15px}.puzzle-editor>a{display:inline-block;font-size:11px;margin-top:15px}.puzzle-editor .muted{line-height:1.8}
+.puzzle-collection{max-width:1206px;margin:24px auto 0;padding:24px 28px;border:1px solid var(--line);border-radius:16px;background:#48ad9e08}
+.puzzle-collection-header{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}.puzzle-collection h2{margin:0;font-size:19px;letter-spacing:-.5px}.puzzle-collection-header>span{font-size:12px;color:var(--muted)}
+.puzzle-collection>p{color:var(--muted);font-size:12px;line-height:1.8;margin:12px 0 18px}
+.puzzle-fragments{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:8px}.puzzle-fragment{min-width:0;border:1px solid var(--line);border-radius:8px;padding:7px;display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center;min-height:57px}.puzzle-fragment>span{font-size:9px;color:var(--muted)}.puzzle-fragment>strong{font-size:13px;overflow-wrap:anywhere;text-align:center;max-width:100%}.puzzle-fragment.is-collected{border-color:#80b95588;background:#80b95512}
+html[data-theme=dark] .puzzle-feedback.is-correct{color:#b0ff6b}
+html[data-theme=dark] .puzzle-editor select{background:#0e1912;border-color:#435738}
+@media(max-width:760px){.puzzle-collection{margin:18px 14px 0;padding:20px}.puzzle-fragments{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media(max-width:480px){.door-puzzle{margin:0 18px 18px;padding:15px}.puzzle-form{flex-direction:column;align-items:stretch}.puzzle-fragments{grid-template-columns:repeat(4,minmax(0,1fr))}.door-solved{width:23px;height:23px;font-size:15px;right:6px;top:6px}}
 @media(max-width:480px){
   .brand{gap:8px}
   .brand .brand-mark{width:38px;height:38px}

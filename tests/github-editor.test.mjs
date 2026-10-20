@@ -59,11 +59,14 @@ test('Öffentliche und falsche Repositories werden abgewiesen', async () => {
     await assert.rejects(() => new GitHubEditor('secret', async (url, options) => url.endsWith(CONTENT_REPOSITORY) ? json(value) : fetcher(url, options)).load());
   }
 });
-test('Bilder und Text werden atomar in einem Commit ohne force gespeichert', async () => {
+test('Bilder, Text und Rätsel werden atomar in einem Commit ohne force gespeichert', async () => {
   const { fetcher, calls } = mock();
   const client = new GitHubEditor('secret', fetcher); await client.load();
   const bytes = Uint8Array.from([137,80,78,71,13,10,26,10,0,0,0,0]);
-  await client.save(data, [{ path: './images/door-01.png', bytes }]);
+  const updated = { ...data, doors: [{ day: 1, puzzle: { type: 'number', answer: '42', fragment: 'FRO' } }] };
+  await client.save(updated, [{ path: './images/door-01.png', bytes }]);
+  const configBlob = calls.filter(c => c.url.endsWith('/git/blobs')).at(-1);
+  assert.deepEqual(JSON.parse(decodeText(JSON.parse(configBlob.options.body).content)), updated);
   const tree = JSON.parse(calls.find(c => c.url.endsWith('/git/trees')).options.body);
   assert.equal(tree.base_tree, 'TREE1');
   assert.deepEqual(tree.tree.map(entry => entry.path), ['images/door-01.png', 'doors-data.json']);

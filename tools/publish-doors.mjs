@@ -4,6 +4,7 @@ import { resolve, relative, sep, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { validateConfig, isDoorUnlocked } from '../script.js';
+import { puzzleHashInput } from '../puzzles.js';
 
 /** Neue Objektstruktur statt Entfernen einzelner Felder: Künftige Inhalte bleiben privat. */
 export function selectReleasedContents(input, now = new Date()) {
@@ -12,6 +13,11 @@ export function selectReleasedContents(input, now = new Date()) {
     version: 1, year: config.year, links: config.links, releaseMode: 'daily',
     doors: config.doors.map(door => isDoorUnlocked(door.day, config.year, now) ? {
       day: door.day, title: door.title, image: door.image, alt: door.alt, text: door.text, released: true,
+      ...(door.puzzle ? { puzzle: {
+        type: door.puzzle.type,
+        answerHash: door.puzzle.answerHash || createHash('sha256').update(puzzleHashInput(door.puzzle.answer, door.puzzle.type, config.year, door.day)).digest('hex'),
+        ...(door.puzzle.type === 'number' ? { fragment: door.puzzle.fragment } : {}),
+      } } : {}),
     } : {
       day: door.day, title: `Türchen ${door.day} – Noch ein bisschen Vorfreude`,
       image: './assets/placeholder.svg', alt: 'Die Überraschung ist noch nicht veröffentlicht.', text: '', released: false,

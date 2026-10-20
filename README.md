@@ -57,6 +57,22 @@ Das Gesamtdokument enthält `version: 1`, `year`, `links` mit `twitch` und `disc
 
 Externe HTTPS-Bildlinks sind möglich und werden erst nach Freigabe im öffentlichen JSON sichtbar. Das externe Bild selbst kann jedoch bereits vorher öffentlich abrufbar sein. Für geheim zu haltende Grafiken deshalb lokale Dateien im privaten `images/`-Ordner verwenden. Signierte Discord-CDN-Links können ablaufen.
 
+## Tagesrätsel und Lösungssatz
+
+Im Web-Editor pro Türchen unter **Tagesrätsel (optional)** den Antworttyp wählen:
+
+- **Zahl → Buchstabenfolge freigeben:** richtige Zahl und die zugehörige Buchstabenfolge eintragen. Beispiel: Antwort `42`, Buchstabenfolge `FRO`. Nach korrekter Eingabe erscheint „Richtig! Die heutige Buchstabenfolge ist FRO“.
+- **Buchstabenfolge prüfen:** die richtige Folge eintragen. Die Rückmeldung lautet „Richtig!“.
+- **Kein Rätsel:** zeigt für dieses Türchen keine Eingabe an.
+
+Die Frage selbst steht in deiner Tagesgrafik oder im Feld **Text & Links**. Änderungen mit **Privat auf GitHub speichern** sichern. Die vollständigen Lösungen liegen im privaten Inhalte-Repository. Groß-/Kleinschreibung und Leerzeichen werden bei Buchstabenfolgen ignoriert. Zahlen akzeptieren führende Nullen und Dezimalpunkt oder -komma ohne Rundungsfehler. Unbegrenzt viele Versuche sind möglich.
+
+[Erfundene Rätsel-Demo öffnen](https://m4sterchris.github.io/creeunity-adventskalender-2026/?preview=puzzle#kalender): Türchen 1 erwartet **24** und gibt **FRO** aus; Türchen 5 erwartet **HE**. Testlösungen bleiben im Arbeitsspeicher und verändern den echten Fortschritt nicht.
+
+Richtig gelöste Rätsel bekommen einen eigenen Haken auf der Kachel. Die Buchstaben sammeln sich unter dem Kalender in Tagesreihenfolge. Öffnungen und richtige Lösungen sind getrennt. Lösungen werden pro Kalenderjahr im Browser unter `creeunity:solved:JAHR` gespeichert; ein geändertes Rätsel macht den alten Haken ungültig. **Infos & Datenschutz → Meinen Fortschritt zurücksetzen** entfernt Öffnungen und gelöste Rätsel. Es gibt keine automatische Nachricht oder Einreichung: Den fertigen Lösungssatz senden die Teilnehmenden selbst privat an M4sterCree.
+
+Die tägliche Veröffentlichung enthält nur Rätsel bereits freigegebener Tage. Die Klartext-Antwort wird durch einen an Jahr, Tag und Antworttyp gebundenen SHA-256-Prüfwert ersetzt; beim Zahlenrätsel wird zusätzlich die Buchstabenbelohnung veröffentlicht. Zukünftige Rätsel enthalten öffentlich weder Prüfwert noch Antwort noch Belohnung. Die Prüfung läuft im Browser, keine Antwort wird an einen Server geschickt. Das ist eine Spielhilfe: Am freigegebenen Tag können versierte Besucher kurze Antworten durchprobieren und die Zahlen-Belohnung technisch auslesen. Lokale Haken sind kein manipulationssicherer Teilnahmenachweis. Andere Browser/Geräte haben eine eigene Sammlung.
+
 ## Text formatieren
 
 Im Feld **Text & Links** Text markieren und die Schaltflächen **B / I / U / S**, Link oder Code anklicken. Unter **Weitere …** stehen Überschriften, Listen, Checklisten, Zitate, Tabellen, Codeblöcke, Trennlinien, Markierung, Spoiler, Hoch-/Tiefstellung, Ausrichtung und fünf Textfarben bereit. Die **Live-Vorschau** zeigt sofort dieselbe Darstellung wie im geöffneten Türchen. Strg/Cmd+B, I, U und K funktionieren direkt im Textfeld.

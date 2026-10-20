@@ -23,14 +23,16 @@ try {
   console.log(`Live-Prüfung · ${berlin.day}.${berlin.month}.${berlin.year} · Europe/Berlin`);
   const response = await get(`${website}doors-data.json?check=${Date.now()}`);
   assert.equal(response.status, 200, 'Öffentliche Kalenderdatei ist nicht erreichbar.');
-  const config = validateConfig(await response.json());
+  const rawConfig = await response.json();
+  const config = validateConfig(rawConfig);
   assert.equal(config.releaseMode, 'daily', 'Die Website benötigt die gefilterte Tagesdatei.');
   const future = config.doors.filter(door => !isDoorUnlocked(door.day, config.year, now));
   for (const door of future) {
     // Nur Nummern und Status melden, niemals eventuell versehentlich veröffentlichte Werte ausgeben.
     const neutral = door.released === false && door.text === '' && door.image === './assets/placeholder.svg'
       && door.title === `Türchen ${door.day} – Noch ein bisschen Vorfreude`
-      && door.alt === 'Die Überraschung ist noch nicht veröffentlicht.';
+      && door.alt === 'Die Überraschung ist noch nicht veröffentlicht.' && !door.puzzle
+      && Object.keys(rawConfig.doors.find(item => item.day === door.day)).every(key => ['day', 'title', 'image', 'alt', 'text', 'released'].includes(key));
     assert.ok(neutral, `Türchen ${door.day}: Zukünftige Metadaten sind öffentlich. Bitte prüfen.`);
   }
   console.log(`PASS: ${future.length} zukünftige Türchen enthalten ausschließlich neutrale Platzhalter.`);
