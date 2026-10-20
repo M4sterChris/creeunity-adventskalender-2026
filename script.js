@@ -254,7 +254,14 @@ function initialize() {
       const number = document.createElement('span'); number.className = 'door-number'; number.textContent = door.day;
       const mark = document.createElement('span'); mark.className = 'door-mark'; mark.setAttribute('aria-hidden', 'true');
       mark.textContent = opened ? '✓' : unlocked || state.preview ? '✧' : '⌑';
-      button.append(ornament, number, mark);
+      // Das Türblatt klappt seitlich auf; die Nummer bleibt im Innenraum lesbar.
+      const leaf = document.createElement('span'); leaf.className = 'door-leaf'; leaf.setAttribute('aria-hidden', 'true');
+      leaf.append(ornament, number, mark);
+      const reveal = document.createElement('span'); reveal.className = 'door-reveal'; reveal.setAttribute('aria-hidden', 'true');
+      const revealNumber = document.createElement('span'); revealNumber.className = 'door-reveal-number'; revealNumber.textContent = door.day;
+      const revealLabel = document.createElement('span'); revealLabel.className = 'door-reveal-label'; revealLabel.textContent = 'OFFEN';
+      reveal.append(revealNumber, revealLabel);
+      button.append(reveal, leaf);
       if (today) { const tag = document.createElement('span'); tag.className = 'today-tag'; tag.textContent = 'HEUTE'; button.append(tag); }
       fragment.append(button);
     }
