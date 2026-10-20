@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 170" fill="none">
+  <!-- Weihnachtsmotiv für geöffnete Türchen ohne verfügbare Tagesgrafik. -->
+  <ellipse cx="70" cy="148" rx="43" ry="8" fill="#b2e3b4" fill-opacity=".1"/>
+  <path d="M65 128h10v20H65z" fill="#749c69"/>
+  <path d="m70 29-23 37h12L35 99h16l-26 37h90L89 99h16L81 66h12L70 29Z" fill="#245640" stroke="#90d571" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="m70 40-15 24 15-5 15 5-15-24Zm-9 37L45 97l25-7 25 7-16-20-9 4-9-4Zm-7 33-18 24 34-8 34 8-18-24-16 5-16-5Z" fill="#70b96a" fill-opacity=".32"/>
+  <path d="m70 12 3.5 7.5 8.2 1.1-6 5.8 1.5 8.2-7.2-4-7.2 4 1.5-8.2-6-5.8 8.2-1.1L70 12Z" fill="#f0d99f"/>
+  <path d="M49 73q21 13 42 0M39 105q31 17 62 0" stroke="#f0d99f" stroke-width="1.5" stroke-linecap="round"/>
+  <g fill="#e3f5c4"><circle cx="61" cy="78" r="2.5"/><circle cx="81" cy="78" r="2.5"/><circle cx="52" cy="112" r="2.7"/><circle cx="71" cy="115" r="2.7"/><circle cx="91" cy="111" r="2.7"/></g>
+  <g stroke="#b8e69b" stroke-linecap="round"><path d="M25 51v8m-4-4h8m85-7v6m-3-3h6M25 94v6m-3-3h6"/></g>
+</svg>

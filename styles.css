@@ -178,17 +178,18 @@ html[data-theme=dark] .door,html[data-theme=dark] .door:hover,html[data-theme=da
 .door-leaf{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:var(--door-fill);border-radius:inherit;transform-origin:left center;pointer-events:none}
 .door-leaf::before{content:'';position:absolute;inset:6px;border:1px solid #9bd57133;border-radius:inherit;pointer-events:none}
 .door-leaf::after{content:'';position:absolute;right:13%;top:46%;width:4px;height:12%;max-height:21px;min-height:12px;border:1px solid #b9f78099;border-radius:3px;background:#a4ff5840;box-shadow:1px 1px 3px #0005}
-.door-reveal{display:none;position:absolute;inset:0 0 0 35%;z-index:1;align-items:center;justify-content:center;flex-direction:column;gap:8px;pointer-events:none}
-.door-reveal-number{color:var(--door-ink);font-size:36px;font-weight:750;line-height:1;letter-spacing:-1.5px}
-.door-reveal-label{font-size:8px;font-weight:650;letter-spacing:1.6px;color:#b0d49b}
+.door-reveal{display:none;position:absolute;inset:8px 8px 8px 36%;z-index:1;align-items:center;justify-content:center;overflow:hidden;border-radius:7px;pointer-events:none}
+.door-thumbnail{display:block;position:relative;width:100%;height:100%;object-fit:contain}
+.door-thumbnail-fallback{position:absolute;inset:0;background:url('./assets/door-surprise.svg') center / contain no-repeat}
 /* Das Blatt schwenkt in die Tiefe, bleibt aber innerhalb der eigenen Rasterkachel. */
 .door.is-opened .door-leaf{transform:perspective(500px) rotateY(64deg);border-right:2px solid #a4ff5880;border-radius:12px 6px 6px 12px;box-shadow:12px 0 18px #0008;filter:brightness(1.15)}
-.door.is-opened .door-leaf .door-number{opacity:.4}
+.door.is-opened .door-leaf .door-number{opacity:.85}
 .door.is-opened .door-reveal{display:flex}
 .door.is-opened .door-mark{display:none}
 .door .today-tag{z-index:3;pointer-events:none}
 .door.is-opened .today-tag{left:35%}
-@media(max-width:480px){.door-reveal-number{font-size:29px}.door-reveal-label{font-size:7px;letter-spacing:1px}.door-reveal{gap:6px}}
+.door.is-opened.is-today .door-reveal{bottom:24px}
+@media(max-width:480px){.door-reveal{inset:6px 5px 6px 37%}}
 .door-number,html[data-theme=dark] .door-number{color:var(--door-ink);text-shadow:0 0 12px #a1ff4f18}
 .door-mark,.door-decoration,html[data-theme=dark] .door-mark,html[data-theme=dark] .door-decoration{color:#a6d785}
 .door.is-opened .door-mark,html[data-theme=dark] .door.is-opened .door-mark{background:#b0ff6b;color:#173609}

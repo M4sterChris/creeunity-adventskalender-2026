@@ -96,13 +96,17 @@ function initialize() {
   let repository = null;
   let githubBusy = false;
   let doorRequest = 0;
+  let privateImageGeneration = 0;
   const pendingImages = new Map();
   const privatePreviews = new Map();
+  const privateImageLoads = new Map();
 
   function clearPrivateImages() {
+    privateImageGeneration++;
     for (const item of pendingImages.values()) URL.revokeObjectURL(item.url);
     for (const url of privatePreviews.values()) URL.revokeObjectURL(url);
-    pendingImages.clear(); privatePreviews.clear();
+    pendingImages.clear(); privatePreviews.clear(); privateImageLoads.clear();
+    lastRender = '';
   }
   function githubStatus(message) { $('github-status').textContent = message; }
   function setGitHubBusy(value) {
@@ -120,15 +124,40 @@ function initialize() {
     if (!repository || !/^(\.\/)?images\//.test(door.image)) return door.image;
     const path = privateImagePath(door.image);
     if (privatePreviews.has(path)) return privatePreviews.get(path);
+    if (privateImageLoads.has(path)) return privateImageLoads.get(path);
     const activeRepository = repository;
-    const blob = await activeRepository.image(path);
-    if (repository !== activeRepository) throw new Error('Die Verbindung wurde beendet.');
-    const extension = path.split('.').pop().toLowerCase();
-    const mime = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', svg: 'image/svg+xml' }[extension];
-    if (!mime) throw new Error('Dieses Bildformat kann nicht angezeigt werden.');
-    const url = URL.createObjectURL(new Blob([blob], { type: mime }));
-    privatePreviews.set(path, url);
-    return url;
+    const generation = privateImageGeneration;
+    const loading = (async () => {
+      const blob = await activeRepository.image(path);
+      if (repository !== activeRepository || generation !== privateImageGeneration) throw new Error('Die Bildvorschau wurde neu geladen oder die Verbindung beendet.');
+      const extension = path.split('.').pop().toLowerCase();
+      const mime = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', svg: 'image/svg+xml' }[extension];
+      if (!mime) throw new Error('Dieses Bildformat kann nicht angezeigt werden.');
+      const url = URL.createObjectURL(new Blob([blob], { type: mime }));
+      privatePreviews.set(path, url);
+      return url;
+    })();
+    privateImageLoads.set(path, loading);
+    try { return await loading; }
+    finally { if (privateImageLoads.get(path) === loading) privateImageLoads.delete(path); }
+  }
+
+  /** Nur geöffnete, zugängliche Türchen laden Bilder; bei Fehlern bleibt das Weihnachtsmotiv. */
+  async function renderDoorThumbnail(door, reveal, canShowImage) {
+    const fallback = document.createElement('span'); fallback.className = 'door-thumbnail-fallback';
+    reveal.append(fallback);
+    const path = safeUrl(door.image, { image: true });
+    if (!canShowImage || !path || new URL(path, location.href).pathname === new URL('./assets/placeholder.svg', location.href).pathname) return;
+    const image = document.createElement('img');
+    image.className = 'door-thumbnail'; image.alt = ''; image.decoding = 'async'; image.hidden = true;
+    image.addEventListener('load', () => { image.hidden = false; fallback.hidden = true; });
+    image.addEventListener('error', () => { image.hidden = true; fallback.hidden = false; });
+    reveal.append(image);
+    try {
+      const source = await resolveDoorImage(door);
+      // Beim Abmelden, Zurücksetzen oder Wechseln des Tages kann dieses Raster bereits ersetzt sein.
+      if (reveal.isConnected && source) image.src = source;
+    } catch { /* Auch private oder nicht mehr verfügbare Bilder fallen auf das Weihnachtsmotiv zurück. */ }
   }
   async function updateEditorImage() {
     if (!state.editor) return;
@@ -229,7 +258,7 @@ function initialize() {
     const december = berlin.year === year && berlin.month === 12;
     // Kein sekündlicher DOM-Austausch: Tastaturfokus und Screenreader bleiben stabil.
     const visibleOpened = state.preview ? state.previewOpened : state.opened;
-    const signature = JSON.stringify([year, berlin, state.preview, [...visibleOpened], state.config.doors.map(d => d.released)]);
+    const signature = JSON.stringify([year, berlin, state.preview, [...visibleOpened], state.config.doors.map(d => [d.released, d.image])]);
     if (signature === lastRender) return;
     lastRender = signature;
     $('calendar-status').textContent = state.preview ? 'Die CreeUnity-Werkstatt ist geöffnet'
@@ -254,13 +283,11 @@ function initialize() {
       const number = document.createElement('span'); number.className = 'door-number'; number.textContent = door.day;
       const mark = document.createElement('span'); mark.className = 'door-mark'; mark.setAttribute('aria-hidden', 'true');
       mark.textContent = opened ? '✓' : unlocked || state.preview ? '✧' : '⌑';
-      // Das Türblatt klappt seitlich auf; die Nummer bleibt im Innenraum lesbar.
+      // Das Türblatt klappt seitlich auf; dahinter erscheint die jeweilige Tagesgrafik.
       const leaf = document.createElement('span'); leaf.className = 'door-leaf'; leaf.setAttribute('aria-hidden', 'true');
       leaf.append(ornament, number, mark);
       const reveal = document.createElement('span'); reveal.className = 'door-reveal'; reveal.setAttribute('aria-hidden', 'true');
-      const revealNumber = document.createElement('span'); revealNumber.className = 'door-reveal-number'; revealNumber.textContent = door.day;
-      const revealLabel = document.createElement('span'); revealLabel.className = 'door-reveal-label'; revealLabel.textContent = 'OFFEN';
-      reveal.append(revealNumber, revealLabel);
+      if (opened) renderDoorThumbnail(door, reveal, state.preview || unlocked);
       button.append(reveal, leaf);
       if (today) { const tag = document.createElement('span'); tag.className = 'today-tag'; tag.textContent = 'HEUTE'; button.append(tag); }
       fragment.append(button);
