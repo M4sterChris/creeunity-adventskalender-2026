@@ -1,5 +1,6 @@
-/* Direkter Zugriff vom Browser auf GitHub. Der Zugriffsschlüssel bleibt nur im Arbeitsspeicher.
- * Keine Tokens in URLs, localStorage, Fehlertexten oder auf der öffentlichen Website speichern.
+/* Direkter Zugriff vom Browser auf GitHub. Diese Klasse hält den Schlüssel im Arbeitsspeicher.
+ * Die Oberfläche kann ihn auf ausdrücklichen Wunsch zusätzlich in sessionStorage merken.
+ * Keine Tokens in URLs, localStorage, Fehlertexten oder im Repository speichern.
  */
 export const CONTENT_REPOSITORY = 'M4sterChris/creeunity-adventskalender-2026-inhalte';
 const ROOT = `https://api.github.com/repos/${CONTENT_REPOSITORY}`;

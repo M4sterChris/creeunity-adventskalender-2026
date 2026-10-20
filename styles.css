@@ -56,6 +56,9 @@ dialog{border-radius:20px}.lightbox{border-radius:0}
 #github-login>label{margin-bottom:12px}#github-login .button{width:100%}
 .access-help{font-size:12px;line-height:1.8;margin-top:15px}.access-help summary{cursor:pointer;font-weight:650}.access-help ol{padding-left:20px}.access-help li{margin:10px 0;overflow-wrap:anywhere}
 #github-status{margin:12px 0 0!important;min-height:0;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.remember-access{display:flex;flex-direction:row;align-items:flex-start;gap:10px;margin-top:18px;font-size:12px;cursor:pointer}
+.remember-access input{width:18px;height:18px;flex:0 0 18px;margin:2px 0 0;padding:0;accent-color:var(--pine)}
+.remember-access small{display:block;margin-top:4px;font-size:11px;font-weight:400;line-height:1.6;color:var(--muted)}
 .connection-pill{display:inline-block;border:1px solid #81a85c;padding:9px 12px;border-radius:30px;background:#a5c67c20;font-size:12px;font-weight:650}
 .connection-actions{display:flex;gap:20px;flex-wrap:wrap;margin-top:12px;font-size:12px}
 .github-save{flex-basis:100%;padding:15px}.admin-actions{align-items:stretch}

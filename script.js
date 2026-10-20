@@ -92,6 +92,7 @@ function initialize() {
   const designPreview = puzzleDemo || new URLSearchParams(location.search).get('preview') === 'design';
   const DRAFT_KEY = 'creeunity:admin-draft:v1';
   const PREVIEW_KEY = 'creeunity:preview:v1';
+  const TAB_ACCESS_KEY = 'creeunity:github-access:tab:v1';
   const state = { config: null, editor: null, published: null, opened: new Set(), previewOpened: new Set(), solved: {}, previewSolved: {}, selectedDay: 1, preview: false, storageOK: true, zoom: 1, activeDay: null };
   let lastRender = '';
   let toastTimeout;
@@ -99,6 +100,7 @@ function initialize() {
   let refreshing = false;
   let refreshTime = 0;
   let repository = null;
+  let editorCredential = '';
   let githubBusy = false;
   let doorRequest = 0;
   let privateImageGeneration = 0;
@@ -120,6 +122,7 @@ function initialize() {
     $('github-reload').disabled = value;
     $('github-disconnect').disabled = value;
     $('github-token').disabled = value;
+    $('github-remember').disabled = value;
     $('admin-form').querySelectorAll('button,input,textarea,select').forEach(el => { el.disabled = value; });
     $('github-save').disabled = value || !repository;
   }
@@ -198,6 +201,42 @@ function initialize() {
   function feedback(message) { $('admin-feedback').textContent = message; }
   const progressKey = () => `creeunity:opened:${state.config.year}`;
   const solvedKey = () => `creeunity:solved:${state.config.year}`;
+  // Testfortschritt bleibt bei F5 erhalten, überschreibt aber nie echte Öffnungen/Lösungen.
+  const previewProgressKey = () => `creeunity:preview-progress:v1:${puzzleDemo ? 'puzzle' : designPreview ? 'design' : 'editor'}:${state.config.year}`;
+
+  function savedSolutions(saved) {
+    const solutions = {};
+    for (let day = 1; day <= 24; day++) {
+      const record = saved?.[day];
+      if (record && typeof record.identity === 'string' && record.identity.length <= 1000 && typeof record.fragment === 'string' && record.fragment.length <= 120) solutions[day] = { identity: record.identity, fragment: record.fragment };
+    }
+    return solutions;
+  }
+
+  function savePreviewProgress() {
+    if (!state.preview || !state.config) return false;
+    return writeStorage(previewProgressKey(), JSON.stringify({ opened: [...state.previewOpened], solved: state.previewSolved, selectedDay: state.selectedDay }), true);
+  }
+
+  function restorePreviewProgress() {
+    try {
+      const saved = JSON.parse(readStorage(previewProgressKey(), true) || 'null');
+      if (!saved || !Array.isArray(saved.opened)) return false;
+      state.previewOpened = new Set(saved.opened.filter(day => Number.isInteger(day) && day >= 1 && day <= 24));
+      state.previewSolved = savedSolutions(saved.solved);
+      state.selectedDay = Number.isInteger(saved.selectedDay) && saved.selectedDay >= 1 && saved.selectedDay <= 24 ? saved.selectedDay : 1;
+      return true;
+    } catch { return false; }
+  }
+
+  function forgetEditorTabState() {
+    writeStorage(TAB_ACCESS_KEY, null, true);
+    try {
+      for (const key of Object.keys(sessionStorage)) {
+        if (key.startsWith('creeunity:preview-progress:v1:editor:')) sessionStorage.removeItem(key);
+      }
+    } catch { state.storageOK = false; }
+  }
 
   function readProgress() {
     try {
@@ -206,11 +245,7 @@ function initialize() {
     } catch { state.opened = new Set(); }
     try {
       const saved = JSON.parse(readStorage(solvedKey()) || '{}');
-      state.solved = {};
-      for (let day = 1; day <= 24; day++) {
-        const record = saved?.[day];
-        if (record && typeof record.identity === 'string' && record.identity.length <= 1000 && typeof record.fragment === 'string' && record.fragment.length <= 120) state.solved[day] = record;
-      }
+      state.solved = savedSolutions(saved);
     } catch { state.solved = {}; }
   }
 
@@ -238,11 +273,21 @@ function initialize() {
         Object.assign(state.config.doors[0], { title: 'Beispielrätsel · Türchen 1', image: './assets/door-surprise.svg', text: 'DEMO: Wie viele Türchen hat dieser Adventskalender? Gib die Zahl ein.', puzzle: { type: 'number', answer: '24', fragment: 'FRO' } });
         Object.assign(state.config.doors[4], { title: 'Beispielrätsel · Türchen 5', image: './assets/emotes/piepLove.png', text: 'DEMO: Die heutige Buchstabenfolge lautet HE. Teste unten die Prüfung.', puzzle: { type: 'letters', answer: 'HE' } });
       }
+      if (state.preview) { restorePreviewProgress(); savePreviewProgress(); }
       readProgress();
       updateLinks();
       renderCalendar();
       $('load-error').hidden = true;
-      if (adminAccess) { populateAdmin(); if (!designPreview) $('admin-modal').showModal(); }
+      if (adminAccess) {
+        populateAdmin();
+        if (!designPreview) {
+          $('admin-modal').showModal();
+          if (readStorage(TAB_ACCESS_KEY, true)) {
+            $('github-remember').checked = true;
+            await connectRepository(false, true);
+          }
+        }
+      }
     } catch (error) {
       $('load-error').hidden = false;
       $('calendar-status').textContent = 'Kalender gerade nicht verfügbar';
@@ -342,7 +387,7 @@ function initialize() {
     $('preview-banner').hidden = !state.preview;
     renderPuzzleCollection(solved);
     $('preview-title').textContent = puzzleDemo ? 'Rätsel-Demo' : designPreview ? 'Designvorschau' : 'Vorschaumodus';
-    $('preview-note').textContent = puzzleDemo ? 'Erfundene Beispiele: Türchen 1 → Zahl 24, Türchen 5 → Buchstaben HE. Testlösungen werden nicht gespeichert.' : designPreview
+    $('preview-note').textContent = puzzleDemo ? 'Erfundene Beispiele: Türchen 1 → Zahl 24, Türchen 5 → Buchstaben HE. Dein Testfortschritt bleibt bei F5 in diesem Tab erhalten.' : designPreview
       ? 'Beispielöffnungen zum Vergleichen. Zukünftige Inhalte bleiben Platzhalter. Dein echter Fortschritt bleibt unverändert.'
       : 'Öffne und schließe ein Türchen, um seinen geöffneten Zustand zu sehen. Dein echter Fortschritt bleibt unverändert.';
     $('reset-preview').textContent = visibleOpened.size ? 'Vorschau zurücksetzen' : 'Beispielöffnungen zeigen';
@@ -389,7 +434,7 @@ function initialize() {
       }
       const records = preview ? state.previewSolved : state.solved;
       records[day] = { identity, fragment: result.fragment };
-      const stored = preview || writeStorage(solvedKey(), JSON.stringify(state.solved));
+      const stored = preview ? savePreviewProgress() : writeStorage(solvedKey(), JSON.stringify(state.solved));
       renderCalendar(); renderActivePuzzle();
       if (!stored) $('puzzle-feedback').textContent += ' Für diesen Besuch gemerkt; dein Browser blockiert die Speicherung.';
     } catch {
@@ -429,8 +474,9 @@ function initialize() {
     renderActivePuzzle();
     let stored = true;
     if (state.preview) {
-      // Vorschau-Öffnungen leben nur im Arbeitsspeicher, niemals im echten Fortschritt.
+      // Vorschau-Öffnungen bleiben getrennt vom echten Fortschritt in dieser Tab-Sitzung.
       state.previewOpened.add(day);
+      stored = savePreviewProgress();
     } else {
       state.opened.add(day);
       stored = writeStorage(progressKey(), JSON.stringify([...state.opened]));
@@ -539,6 +585,7 @@ function initialize() {
     updateTextPreview();
     $('admin-door-picker').querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.day) === door.day)));
     updateEditorImage();
+    savePreviewProgress();
   }
   function captureEditor() {
     const door = state.editor.doors.find(item => item.day === state.selectedDay);
@@ -610,7 +657,9 @@ function initialize() {
     if (action) { event.preventDefault(); applyTextFormat(action); }
   });
   function setPreview(enabled) {
+    savePreviewProgress();
     state.preview = Boolean(enabled && (adminAccess || designPreview));
+    if (state.preview) restorePreviewProgress();
     if (!state.preview) {
       state.previewOpened.clear();
       state.previewSolved = {};
@@ -635,6 +684,7 @@ function initialize() {
     if (!state.preview) return;
     state.previewOpened = state.previewOpened.size ? new Set() : new Set([1, 5, 12]);
     state.previewSolved = {};
+    savePreviewProgress();
     renderCalendar();
   });
   $('admin-form').addEventListener('submit', event => {
@@ -704,31 +754,49 @@ function initialize() {
     finally { event.target.value = ''; setGitHubBusy(false); }
   });
 
-  async function connectRepository(reload = false) {
+  async function connectRepository(reload = false, automatic = false) {
     if (githubBusy) return;
     setGitHubBusy(true);
     let candidate;
+    const credential = reload ? editorCredential : $('github-token').value.trim() || ($('github-remember').checked ? readStorage(TAB_ACCESS_KEY, true) || '' : '');
     try {
       githubStatus('Privater Kalender wird geladen …');
-      candidate = reload ? repository : new GitHubEditor($('github-token').value);
+      candidate = reload ? repository : new GitHubEditor(credential);
       $('github-token').value = '';
       const config = validateConfig(await candidate.load());
       if (repository && repository !== candidate) repository.disconnect();
       repository = candidate;
+      editorCredential = credential;
       clearPrivateImages();
       state.config = config; state.selectedDay = 1;
-      state.previewSolved = {};
       state.preview = true;
+      restorePreviewProgress();
       writeStorage(PREVIEW_KEY, 'true', true);
       readProgress(); updateLinks(); populateAdmin(); renderCalendar();
       $('github-login').hidden = true; $('github-connected').hidden = false;
-      githubStatus('Private Inhalte geladen. Wähle ein Türchen, ändere Text oder Bild und speichere direkt auf GitHub. Die Vorschau ist aktiv.');
+      const remembered = $('github-remember').checked && writeStorage(TAB_ACCESS_KEY, editorCredential, true);
+      if (!$('github-remember').checked) writeStorage(TAB_ACCESS_KEY, null, true);
+      if (!remembered) $('github-remember').checked = false;
+      githubStatus(`${automatic ? 'Nach dem Neuladen wieder verbunden.' : 'Private Inhalte geladen.'} Die Vorschau ist aktiv.${remembered ? ' Zugang bleibt bei F5 in diesem Tab erhalten.' : ' Ohne gemerkten Zugang ist nach F5 eine neue Verbindung nötig.'}`);
     } catch (error) {
       if (!reload) candidate?.disconnect();
-      githubStatus(error.message);
+      if (/ungültig|abgelaufen|ausschließlich|Quelldatei|Schreibzugriff/.test(error.message) && readStorage(TAB_ACCESS_KEY, true) === credential) {
+        writeStorage(TAB_ACCESS_KEY, null, true); $('github-remember').checked = false;
+      }
+      githubStatus(`${automatic ? 'Automatisches Verbinden fehlgeschlagen. ' : ''}${error.message}`);
     } finally { $('github-token').value = ''; setGitHubBusy(false); }
   }
   $('github-connect').addEventListener('click', () => connectRepository());
+  $('github-remember').addEventListener('change', () => {
+    if (!$('github-remember').checked) {
+      const removed = writeStorage(TAB_ACCESS_KEY, null, true);
+      githubStatus(removed ? 'Gemerkter Zugang entfernt. Die aktuelle Verbindung bleibt bis zum Neuladen oder Abmelden aktiv.' : 'Dein Browser blockiert das Entfernen des gemerkten Zugangs.');
+    } else if (editorCredential) {
+      const saved = writeStorage(TAB_ACCESS_KEY, editorCredential, true);
+      if (!saved) $('github-remember').checked = false;
+      githubStatus(saved ? 'Zugang bleibt bei F5 in diesem Tab erhalten. Abmelden entfernt ihn wieder.' : 'Dein Browser blockiert das Merken des Zugangs.');
+    }
+  });
   $('github-token').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); connectRepository(); } });
   $('github-reload').addEventListener('click', () => connectRepository(true));
   $('github-save').addEventListener('click', async () => {
@@ -748,6 +816,7 @@ function initialize() {
     finally { setGitHubBusy(false); }
   });
   $('github-disconnect').addEventListener('click', () => {
+    forgetEditorTabState(); editorCredential = ''; $('github-remember').checked = false;
     repository?.disconnect(); repository = null; ++doorRequest;
     clearPrivateImages();
     state.config = structuredClone(state.published); state.preview = false; state.selectedDay = 1;
@@ -799,5 +868,6 @@ function initialize() {
   setInterval(() => { if (!document.hidden) refreshPublicConfiguration(); }, 60000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { renderCalendar(); refreshPublicConfiguration(); } });
   window.addEventListener('storage', event => { if (state.config && [progressKey(), solvedKey()].includes(event.key)) { readProgress(); renderCalendar(); if ($('door-modal').open) renderActivePuzzle(); } });
+  window.addEventListener('pagehide', savePreviewProgress);
   loadConfiguration();
 }
