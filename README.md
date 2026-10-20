@@ -141,6 +141,8 @@ Bei einem Umzug den Repository-Namen im privaten Workflow anpassen und den Deplo
 
 ## Bilder, Bedienung und Fortschritt
 
+Mit der [Designvorschau](https://m4sterchris.github.io/creeunity-adventskalender-2026/?preview=design#kalender) lassen sich geöffnete Türchen schon vor Dezember ansehen. Die Tage 1, 5 und 12 starten als Beispielöffnungen; weitere Türchen werden beim Öffnen ebenfalls transparent und abgehakt. „Vorschau zurücksetzen“ setzt nur diese Testöffnungen zurück. „Beenden“ stellt den echten Fortschritt und die Datumsprüfung wieder her. Die Designvorschau lädt ausschließlich öffentliche Inhalte, künftige Türchen zeigen Platzhalter. Auch der Editor-Vorschaumodus markiert Testöffnungen jetzt sichtbar. Testöffnungen bleiben nur im Arbeitsspeicher und verändern keine gespeicherten Öffnungen.
+
 Dark Mode ist beim ersten Besuch der Standard. Der Sonnenschalter im Header aktiviert den Hellmodus. Die gewählte Darstellung wird unter `creeunity:theme` im Browser gespeichert. Die Türchen sind pro Kalenderjahr in einer festen, gemischten Reihenfolge angeordnet und ändern ihre Position nicht bei einem Reload.
 
 Die Tagesgrafik wird vollständig mit `object-fit: contain` angezeigt. Ein Klick öffnet die bildschirmfüllende Lightbox. **+ / −** zoomen bis auf das Fünffache der eingepassten Größe; anschließend scrollen oder wischen. **Einpassen / Reset** stellt die Gesamtansicht wieder her. **Esc** schließt den obersten Dialog. Tastaturfokus, Bildbeschreibungen und reduzierte Bewegung werden berücksichtigt.

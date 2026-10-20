@@ -235,6 +235,9 @@ html[data-theme=dark] .twitch-link{border-color:#48ad9e55}
 .brand-name{font-size:25px;font-weight:750;letter-spacing:-1px;line-height:1}
 .brand-accent{color:var(--pine)}
 .brand .brand-subtitle{font-size:8px;letter-spacing:2px;font-weight:550;line-height:1.2;margin:0;color:var(--muted)}
+.preview-banner>span{flex:1 1 250px;line-height:1.6}
+.preview-banner #reset-preview{margin-left:0}
+.preview-control>a{display:inline-block;margin:12px 0 0 24px;font-weight:600}
 @media(max-width:480px){
   .brand{gap:8px}
   .brand .brand-mark{width:38px;height:38px}

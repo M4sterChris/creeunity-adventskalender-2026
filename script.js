@@ -83,9 +83,11 @@ if (typeof document !== 'undefined') initialize();
 function initialize() {
   const $ = id => document.getElementById(id);
   const adminAccess = new URLSearchParams(location.search).get('admin') === 'true';
+  // Designvorschau lädt ausschließlich öffentliche Inhalte und benötigt keinen Zugangsschlüssel.
+  const designPreview = new URLSearchParams(location.search).get('preview') === 'design';
   const DRAFT_KEY = 'creeunity:admin-draft:v1';
   const PREVIEW_KEY = 'creeunity:preview:v1';
-  const state = { config: null, editor: null, published: null, opened: new Set(), selectedDay: 1, preview: false, storageOK: true, zoom: 1, activeDay: null };
+  const state = { config: null, editor: null, published: null, opened: new Set(), previewOpened: new Set(), selectedDay: 1, preview: false, storageOK: true, zoom: 1, activeDay: null };
   let lastRender = '';
   let toastTimeout;
   let resetArmed = false;
@@ -176,7 +178,7 @@ function initialize() {
       if (!response.ok) throw new Error(`doors-data.json konnte nicht geladen werden (HTTP ${response.status}).`);
       state.published = validateConfig(await response.json());
       state.config = structuredClone(state.published);
-      if (adminAccess) {
+      if (adminAccess && !designPreview) {
         const draft = readStorage(DRAFT_KEY);
         if (draft) {
           try { state.config = validateConfig(JSON.parse(draft)); feedback('Dein lokaler Entwurf wurde geladen.'); }
@@ -184,11 +186,15 @@ function initialize() {
         }
         state.preview = readStorage(PREVIEW_KEY, true) === 'true';
       }
+      if (designPreview) {
+        state.preview = true;
+        state.previewOpened = new Set([1, 5, 12]);
+      }
       readProgress();
       updateLinks();
       renderCalendar();
       $('load-error').hidden = true;
-      if (adminAccess) { populateAdmin(); $('admin-modal').showModal(); }
+      if (adminAccess) { populateAdmin(); if (!designPreview) $('admin-modal').showModal(); }
     } catch (error) {
       $('load-error').hidden = false;
       $('calendar-status').textContent = 'Kalender gerade nicht verfügbar';
@@ -222,7 +228,8 @@ function initialize() {
     const berlin = getBerlinDateParts(now);
     const december = berlin.year === year && berlin.month === 12;
     // Kein sekündlicher DOM-Austausch: Tastaturfokus und Screenreader bleiben stabil.
-    const signature = JSON.stringify([year, berlin, state.preview, [...state.opened], state.config.doors.map(d => d.released)]);
+    const visibleOpened = state.preview ? state.previewOpened : state.opened;
+    const signature = JSON.stringify([year, berlin, state.preview, [...visibleOpened], state.config.doors.map(d => d.released)]);
     if (signature === lastRender) return;
     lastRender = signature;
     $('calendar-status').textContent = state.preview ? 'Die CreeUnity-Werkstatt ist geöffnet'
@@ -232,7 +239,7 @@ function initialize() {
     const fragment = document.createDocumentFragment();
     for (const day of getDoorOrder(year)) {
       const door = state.config.doors.find(item => item.day === day);
-      const opened = state.opened.has(door.day);
+      const opened = visibleOpened.has(door.day);
       const unlocked = isDoorUnlocked(door.day, year, now) && door.released !== false;
       const today = december && berlin.day === door.day;
       const button = document.createElement('button');
@@ -252,10 +259,15 @@ function initialize() {
       fragment.append(button);
     }
     $('doors-grid').replaceChildren(fragment);
-    $('progress-text').textContent = `${state.opened.size} von 24 geöffnet`;
-    $('calendar-progress').value = state.opened.size;
-    $('calendar-progress').textContent = `${state.opened.size} von 24`;
+    $('progress-text').textContent = `${state.preview ? 'Vorschau: ' : ''}${visibleOpened.size} von 24 geöffnet`;
+    $('calendar-progress').value = visibleOpened.size;
+    $('calendar-progress').textContent = `${visibleOpened.size} von 24`;
     $('preview-banner').hidden = !state.preview;
+    $('preview-title').textContent = designPreview ? 'Designvorschau' : 'Vorschaumodus';
+    $('preview-note').textContent = designPreview
+      ? 'Beispielöffnungen zum Vergleichen. Zukünftige Inhalte bleiben Platzhalter. Dein echter Fortschritt bleibt unverändert.'
+      : 'Öffne und schließe ein Türchen, um seinen geöffneten Zustand zu sehen. Dein echter Fortschritt bleibt unverändert.';
+    $('reset-preview').textContent = visibleOpened.size ? 'Vorschau zurücksetzen' : 'Beispielöffnungen zeigen';
   }
 
   async function openDoor(day, trigger) {
@@ -286,16 +298,23 @@ function initialize() {
     if (image) $('door-image').src = image;
     else $('door-image').removeAttribute('src');
     renderFormattedText(door.text, $('door-description'));
-    if (!state.preview) {
+    let stored = true;
+    if (state.preview) {
+      // Vorschau-Öffnungen leben nur im Arbeitsspeicher, niemals im echten Fortschritt.
+      state.previewOpened.add(day);
+    } else {
       state.opened.add(day);
-      const stored = writeStorage(progressKey(), JSON.stringify([...state.opened]));
-      renderCalendar();
-      // Das Raster wird neu gerendert: Fokus nach dem Schließen auf das neue Türchen setzen.
-      $('door-modal').onclose = () => {
-        if (!document.querySelector('dialog[open]')) document.querySelector(`.door[data-day="${day}"]`)?.focus({ preventScroll: true });
-        if (!stored) toast('Dein Browser erlaubt gerade keinen lokalen Speicher. Dein Fortschritt bleibt für diesen Besuch erhalten.');
-      };
-    } else { $('door-modal').onclose = () => trigger?.focus({ preventScroll: true }); }
+      stored = writeStorage(progressKey(), JSON.stringify([...state.opened]));
+    }
+    renderCalendar();
+    // Raster-Buttons wurden ersetzt; Editor-Schaltflächen bleiben als Fokusziel erhalten.
+    $('door-modal').onclose = () => {
+      if (!document.querySelector('dialog[open]')) {
+        const focusTarget = trigger?.isConnected ? trigger : document.querySelector(`.door[data-day="${day}"]`);
+        focusTarget?.focus({ preventScroll: true });
+      }
+      if (!stored) toast('Dein Browser erlaubt gerade keinen lokalen Speicher. Dein Fortschritt bleibt für diesen Besuch erhalten.');
+    };
     $('door-modal').showModal();
     $('door-modal').scrollTop = 0;
   }
@@ -437,8 +456,16 @@ function initialize() {
     if (action) { event.preventDefault(); applyTextFormat(action); }
   });
   function setPreview(enabled) {
-    state.preview = Boolean(enabled && adminAccess);
-    writeStorage(PREVIEW_KEY, String(state.preview), true);
+    state.preview = Boolean(enabled && (adminAccess || designPreview));
+    if (!state.preview) {
+      state.previewOpened.clear();
+      if (designPreview) {
+        const url = new URL(location.href);
+        url.searchParams.delete('preview');
+        history.replaceState(null, '', url);
+      }
+    }
+    if (adminAccess) writeStorage(PREVIEW_KEY, String(state.preview), true);
     $('preview-toggle').checked = state.preview;
     renderCalendar();
   }
@@ -448,6 +475,11 @@ function initialize() {
     feedback(state.preview ? 'Vorschau aktiv: Schließe den Editor, um alle Türchen zu testen.' : 'Vorschau beendet. Die Berliner Datumsprüfung ist wieder aktiv.');
   });
   $('end-preview').addEventListener('click', () => setPreview(false));
+  $('reset-preview').addEventListener('click', () => {
+    if (!state.preview) return;
+    state.previewOpened = state.previewOpened.size ? new Set() : new Set([1, 5, 12]);
+    renderCalendar();
+  });
   $('admin-form').addEventListener('submit', event => {
     event.preventDefault();
     if (!applyEditor()) return;
@@ -561,6 +593,7 @@ function initialize() {
     repository?.disconnect(); repository = null; ++doorRequest;
     clearPrivateImages();
     state.config = structuredClone(state.published); state.preview = false; state.selectedDay = 1;
+    state.previewOpened.clear();
     writeStorage(PREVIEW_KEY, 'false', true);
     readProgress(); updateLinks(); populateAdmin(); renderCalendar();
     $('door-title').textContent = ''; $('door-description').replaceChildren();
