@@ -23,6 +23,21 @@ test('Ab Berliner Mitternacht wird ausschließlich der richtige Tag exportiert',
     assert.doesNotMatch(JSON.stringify(door), /GEHEIM|geheim/);
   }
 });
+
+test('Alle 24 Berliner Tageswechsel geben genau die bis dahin fälligen Inhalte frei', () => {
+  const input = privateData();
+  for (let day = 1; day <= 24; day++) {
+    // Dezember in Berlin ist UTC+1; der Tag beginnt am Vortag um 23:00 UTC.
+    const midnight = Date.UTC(2026, 11, day) - 60 * 60 * 1000;
+    for (const [offset, expected] of [[-1, day - 1], [0, day]]) {
+      const output = selectReleasedContents(input, new Date(midnight + offset));
+      assert.equal(output.doors.filter(door => door.released).length, expected, `Tag ${day}, Offset ${offset}`);
+      for (const door of output.doors.filter(door => !door.released)) {
+        assert.doesNotMatch(JSON.stringify(door), /GEHEIM|geheim|images\//, `Türchen ${door.day} bleibt privat`);
+      }
+    }
+  }
+});
 test('Verspätete Actions holen alle bisherigen Tage nach', () => {
   const output = selectReleasedContents(privateData(), new Date('2026-12-07T02:17:00Z'));
   assert.equal(output.doors.filter(d => d.released).length, 7);
@@ -62,6 +77,45 @@ test('Publisher kopiert ausschließlich freigegebene Bilder und ist wiederholbar
   assert.equal((await readdir(resolve(target, 'assets/released/2026'))).length, 1);
   assert.doesNotMatch(JSON.stringify(manifest.doors.slice(1)), /GEHEIM|geheim/);
   assert.equal((await publishDoors({ source, target, now })).changed, false);
+});
+
+test('Datei-Probelauf über den Dezember veröffentlicht weder Texte noch Bilddateien vorzeitig', async t => {
+  const { source, target } = await fixture(t);
+  for (let day = 1; day <= 24; day++) {
+    await writeFile(resolve(source, `images/geheim-${day}.svg`), `<svg xmlns="http://www.w3.org/2000/svg"><title>PRIVATE-BILD-${day}-ENDE</title></svg>`);
+  }
+  const cases = [
+    ['2026-11-30T22:59:59.999Z', 0],
+    ['2026-11-30T23:00:00.000Z', 1],
+    ['2026-12-01T22:59:59.999Z', 1],
+    ['2026-12-01T23:00:00.000Z', 2],
+    ['2026-12-12T03:17:00.000Z', 12],
+    ['2026-12-23T22:59:59.999Z', 23],
+    ['2026-12-23T23:00:00.000Z', 24],
+  ];
+  for (const [date, expected] of cases) {
+    const result = await publishDoors({ source, target, now: new Date(date) });
+    assert.equal(result.released, expected);
+    const manifest = JSON.parse(await readFile(resolve(target, 'doors-data.json'), 'utf8'));
+    const imageFolder = resolve(target, 'assets/released/2026');
+    let images = [];
+    try { images = await readdir(imageFolder); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+    assert.equal(images.length, expected, `Bilddateien am ${date}`);
+    for (let day = 1; day <= 24; day++) {
+      const door = manifest.doors[day - 1];
+      assert.equal(door.released, day <= expected);
+      if (day <= expected) {
+        assert.equal(door.title, `GEHEIM-TITEL-${day}`);
+        const bytes = await readFile(resolve(target, door.image), 'utf8');
+        assert.ok(bytes.includes(`PRIVATE-BILD-${day}-ENDE`));
+      } else {
+        assert.equal(door.text, '');
+        assert.equal(door.image, './assets/placeholder.svg');
+        assert.ok(!images.some(name => name.startsWith(`day-${String(day).padStart(2, '0')}-`)));
+        assert.doesNotMatch(JSON.stringify(door), /GEHEIM|geheim/);
+      }
+    }
+  }
 });
 test('Publisher schreibt bei fehlendem heutigen Bild keine neue Kalenderdatei', async t => {
   const { source, target } = await fixture(t);

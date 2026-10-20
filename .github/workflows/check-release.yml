@@ -1,0 +1,19 @@
+name: Freigabe testen
+
+on:
+  workflow_dispatch:
+
+# Dieser Test darf weder Inhalte veröffentlichen noch Dateien im Repository verändern.
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Berliner Tageswechsel und Veröffentlichung mit künstlichen Daten testen
+        run: node --test tests/*.test.mjs
+      - name: Öffentliche Website auf vorzeitig erreichbare Inhalte prüfen
+        run: node tools/check-public-release.mjs

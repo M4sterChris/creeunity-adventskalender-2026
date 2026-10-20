@@ -153,6 +153,14 @@ Für echte Gewinnspiele Teilnahmebedingungen und erforderliche Betreiber-/Datens
 
 ## Dateien und Tests
 
+### Freigabe selbst prüfen
+
+Unter [GitHub Actions → Freigabe testen](https://github.com/M4sterChris/creeunity-adventskalender-2026/actions/workflows/check-release.yml) **Run workflow → Run workflow** wählen. Der Test verwendet künstliche Inhalte, simuliert alle 24 Berliner Tageswechsel und prüft zusätzlich die aktuell öffentliche Website. Er hat ausschließlich Leserechte und veröffentlicht keine echten Türchen. Ein grüner Lauf bedeutet: Die geprüften Fälle und der zu diesem Zeitpunkt öffentliche Stand sind in Ordnung; spätere Änderungen und die frühere Git-Historie werden dadurch nicht garantiert.
+
+Die Live-Prüfung kontrolliert zukünftige Metadaten und Tagesgrafiken, die öffentliche Dateiliste und den Zugriff auf private Dateien ohne Anmeldung. Netzwerkfehler oder GitHub-Anfragelimits führen zu einem fehlgeschlagenen beziehungsweise nicht prüfbaren Lauf. Künftige Tage werden anhand der tatsächlichen Zeit bestimmt, niemals anhand einer im Editor eingestellten Vorschauzeit. Die eigene Geräteuhr sollte bei lokalem Start stimmen.
+
+Lokal lassen sich dieselben Prüfungen ohne zusätzliche Pakete mit `node --test tests/*.test.mjs` und `node tools/check-public-release.mjs` starten. Wenn npm installiert ist, funktionieren auch `npm test` und `npm run test:live`. **Das Kalenderjahr echter Inhalte zum Testen nicht zurückstellen und keinen Testlauf mit künstlichem Dezemberdatum gegen das echte öffentliche Repository ausführen.** Die Datumssimulation arbeitet ausschließlich in temporären Testverzeichnissen mit künstlichen Dateien. Die normale Designvorschau prüft das Aussehen; der Freigabetest prüft die Veröffentlichungslogik.
+
 ```text
 index.html, styles.css, script.js   Moderne Website und Web-Editor
 theme.js                          Dunkel-/Hellmodus ohne helles Aufblitzen
