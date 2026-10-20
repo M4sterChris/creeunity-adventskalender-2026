@@ -182,10 +182,10 @@ html[data-theme=dark] .door,html[data-theme=dark] .door:hover,html[data-theme=da
 /* Nur die Raster-Vorschau wird flächig zugeschnitten; Dialog und Lightbox zeigen das Original. */
 .door-thumbnail{display:block;position:relative;width:100%;height:100%;object-fit:cover;object-position:center}
 .door-thumbnail-fallback{position:absolute;inset:0;background:url('./assets/door-surprise.svg') center / contain no-repeat}
-/* Nach außen aufgeklappt: Scharnier rechts am sichtbaren Blatt, freie Kante links. */
-.door.is-opened .door-leaf{inset:7px 0 7px 31%;transform:perspective(1000px) rotateY(-112deg);border:1px solid #a4ff5880;border-radius:6px;box-shadow:8px 0 16px #0008;filter:brightness(1.15)}
-.door.is-opened .door-leaf .door-number{opacity:.85;transform:rotateY(180deg)}
-.door.is-opened::after{content:'';position:absolute;inset:0 56% 0 30%;z-index:1;background:linear-gradient(90deg,#0008,transparent);pointer-events:none}
+/* Feste Scharniere am linken Rahmen: Das Blatt schwenkt innerhalb der Kachel nach innen. */
+.door.is-opened .door-leaf{inset:0;transform:perspective(600px) rotateY(70deg);border:1px solid #a4ff5880;border-radius:12px 6px 6px 12px;background:linear-gradient(#9bd571,#9bd571) 2px 24% / 3px 12% no-repeat,linear-gradient(#9bd571,#9bd571) 2px 76% / 3px 12% no-repeat,var(--door-fill);box-shadow:10px 0 18px #0008;filter:brightness(1.15)}
+.door.is-opened .door-leaf .door-number{opacity:.85}
+.door.is-opened::after{content:'';position:absolute;inset:0 56% 0 0;z-index:1;background:linear-gradient(90deg,#0009,transparent);pointer-events:none}
 .door.is-opened .door-reveal{display:flex}
 .door.is-opened .door-mark{display:none}
 .door .today-tag{z-index:3;pointer-events:none}
