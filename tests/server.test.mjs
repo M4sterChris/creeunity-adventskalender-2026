@@ -138,6 +138,19 @@ test('Audio-Player kann freigegebene Dateien vorspulen; zukünftiges Audio bleib
   assert.equal((await fetch(base+'/audio/tag1.mp3',{headers:{Range:'bytes=99-'}})).status,416);
 });
 
+test('Server respektiert November-Test bei Medien, Öffnungen und Codeprüfung ohne öffentliche Lösungen',async t=>{
+  const f=await fixture(t);f.clock.value=Date.parse('2026-11-19T12:00:00Z');f.config.releaseMonth=11;
+  const contentDir=resolve(f.configFile,'..');await mkdir(resolve(contentDir,'audio'));
+  f.config.doors[18].audio='./audio/tag19.mp3';f.config.doors[19].audio='./audio/tag20.mp3';
+  await writeFile(resolve(contentDir,'audio/tag19.mp3'),'ID3-test-audio19');await writeFile(resolve(contentDir,'audio/tag20.mp3'),'ID3-test-audio20');
+  await writeFile(f.configFile,JSON.stringify(f.config));
+  assert.equal((await f.get('/audio/tag19.mp3')).status,200);assert.equal((await f.get('/audio/tag20.mp3')).status,404);
+  const publicData=await(await f.get('/doors-data.json')).json();assert.equal(publicData.releaseMonth,11);
+  assert.equal(publicData.doors.filter(d=>d.released).length,19);assert.equal(publicData.doors[0].puzzle.answer,undefined);assert.equal(publicData.doors[0].puzzle.fragment,undefined);
+  const cookie=await f.login();assert.equal((await f.post('/api/opened/2026/19',{},cookie)).status,200);assert.equal((await f.post('/api/opened/2026/20',{},cookie)).status,404);
+  assert.equal((await f.post('/api/puzzles/2026/1/answer',{answer:'042'},cookie)).status,200);
+});
+
 test('Logout, neue Sitzung, anderer Browser und Serverneustart setzen Sperren nicht zurück', async t => {
   const f = await fixture(t); const cookie = await f.login();
   for (let i = 0; i < 10; i++) await answer(f, cookie);

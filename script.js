@@ -20,11 +20,14 @@ export function getBerlinDateParts(date = new Date()) {
 }
 
 /** Nach dem Kalenderjahr bleiben vergangene Türchen ebenfalls zugänglich. */
-export function isDoorUnlocked(day, year, date = new Date()) {
+export function isDoorUnlocked(day, year, date = new Date(), releaseMonth = 12) {
   if (!Number.isInteger(day) || day < 1 || day > 24) return false;
+  if (![11, 12].includes(releaseMonth)) return false;
   const berlin = getBerlinDateParts(date);
-  return berlin.year > year || (berlin.year === year && berlin.month === 12 && berlin.day >= day);
+  return berlin.year > year || (berlin.year === year && (berlin.month > releaseMonth || (berlin.month === releaseMonth && berlin.day >= day)));
 }
+
+export function isConfigDoorUnlocked(day, config, date = new Date()) { return isDoorUnlocked(day, config.year, date, config.releaseMonth ?? 12); }
 
 /** Gemischt, aber pro Kalenderjahr stabil: kein Springen bei Refresh oder Datumswechsel. */
 export function getDoorOrder(year) {
@@ -57,6 +60,7 @@ export function validateConfig(input) {
   if (!input || input.version !== 1 || !Number.isInteger(input.year) || input.year < 2024 || input.year > 2100) {
     throw new Error('Bitte verwende Version 1 und ein Kalenderjahr zwischen 2024 und 2100.');
   }
+  if (input.releaseMonth !== undefined && ![11, 12].includes(input.releaseMonth)) throw new Error('Freigabemonat muss November (11) oder Dezember (12) sein.');
   if (!Array.isArray(input.doors) || input.doors.length !== 24) throw new Error('Die JSON-Datei muss genau 24 Türchen enthalten.');
   const days = new Set();
   const doors = input.doors.map(door => {
@@ -82,6 +86,7 @@ export function validateConfig(input) {
     if (links[name] && !safeUrl(links[name])) throw new Error(`Bitte eine gültige HTTPS-URL für ${name} eingeben.`);
   }
   return { version: 1, year: input.year, links: { twitch: links.twitch || '', discord: links.discord || '' },
+    ...(input.releaseMonth !== undefined ? { releaseMonth: input.releaseMonth } : {}),
     ...(input.releaseMode === 'daily' ? { releaseMode: 'daily' } : {}), doors };
 }
 
@@ -128,6 +133,8 @@ function initialize() {
   let openedEpoch = 0;
   let accountEpoch = 0;
   const serverNow = () => serverClock.time + performance.now() - serverClock.received;
+  const releaseMonthName = () => state.config.releaseMonth === 11 ? 'November' : 'Dezember';
+  const isCalendarDayUnlocked = (day, date = new Date()) => isConfigDoorUnlocked(day, state.config, date);
   function syncServerClock(value) {
     if (Number.isFinite(value)) serverClock = { time: value, received: performance.now() };
   }
@@ -377,8 +384,8 @@ function initialize() {
     } catch { /* Der Türchenplayer zeigt bei Bedarf den Ladehinweis. */ }
   }
   $('door-audio').addEventListener('error', () => { if ($('door-audio').hasAttribute('src')) $('audio-error').hidden = false; });
-  $('door-modal').addEventListener('close', resetDoorAudio);
-  $('admin-modal').addEventListener('close', resetEditorAudio);
+  $('door-modal').addEventListener('close', () => { if (!$('door-modal').open) resetDoorAudio(); });
+  $('admin-modal').addEventListener('close', () => { if (!$('admin-modal').open) resetEditorAudio(); });
   $('door-audio').addEventListener('play', () => $('admin-audio-preview').pause());
   $('admin-audio-preview').addEventListener('play', () => $('door-audio').pause());
 
@@ -401,7 +408,7 @@ function initialize() {
     toastTimeout = setTimeout(() => { $('toast').hidden = true; }, 6500);
   }
   function feedback(message) { $('admin-feedback').textContent = message; }
-  const progressKey = () => `creeunity:opened:${state.config.year}`;
+  const progressKey = () => state.config.releaseMonth === 11 ? `creeunity:test-opened:${state.config.year}:11` : `creeunity:opened:${state.config.year}`;
   const solvedKey = () => `creeunity:solved:${state.config.year}`;
   // Testfortschritt bleibt bei F5 erhalten, überschreibt aber nie echte Öffnungen/Lösungen.
   const previewProgressKey = () => `creeunity:preview-progress:v1:${puzzleDemo ? 'puzzle' : designPreview ? 'design' : 'editor'}:${state.config.year}`;
@@ -516,17 +523,21 @@ function initialize() {
       else link.removeAttribute('href');
     }
     $('calendar-year').textContent = state.config.year;
+    $('calendar-month').textContent = releaseMonthName();
+    $('release-help').textContent = `Ab dem 1. ${releaseMonthName()}, nach der täglichen Freigabe.`;
+    $('release-info-title').textContent = state.config.releaseMonth === 11 ? 'Öffentlicher November-Test' : 'Ein Dezember voller CreeUnity';
+    $('release-info').textContent = `Jedes Türchen erscheint frühestens am jeweiligen ${releaseMonthName()}tag nach Berliner Zeit. Frühere Türchen bleiben erreichbar.`;
     $('footer-year').textContent = state.config.year;
     document.title = `CreeUnity Adventskalender · ${state.config.year}`;
   }
 
   function solvedPuzzles() {
     const records = state.preview ? state.previewSolved : state.solved;
-    return state.config.doors.filter(door => door.puzzle && (state.preview || (isDoorUnlocked(door.day, state.config.year) && door.released !== false)) && records[door.day]?.identity === puzzleIdentity(door.puzzle));
+    return state.config.doors.filter(door => door.puzzle && (state.preview || (isCalendarDayUnlocked(door.day) && door.released !== false)) && records[door.day]?.identity === puzzleIdentity(door.puzzle));
   }
 
   function renderPuzzleCollection(solved) {
-    const enabled = state.config.doors.some(door => door.puzzle && (state.preview || (isDoorUnlocked(door.day, state.config.year) && door.released !== false)));
+    const enabled = state.config.doors.some(door => door.puzzle && (state.preview || (isCalendarDayUnlocked(door.day) && door.released !== false)));
     $('puzzle-collection').hidden = !enabled;
     $('solved-progress').textContent = `${state.preview ? 'Vorschau: ' : ''}${solved.length} von 24 Rätseln gelöst`;
     const records = state.preview ? state.previewSolved : state.solved;
@@ -546,29 +557,30 @@ function initialize() {
     const { year } = state.config;
     const now = new Date();
     const berlin = getBerlinDateParts(now);
-    const december = berlin.year === year && berlin.month === 12;
+    const releaseMonth = state.config.releaseMonth ?? 12;
+    const december = berlin.year === year && berlin.month === releaseMonth;
     // Kein sekündlicher DOM-Austausch: Tastaturfokus und Screenreader bleiben stabil.
     const visibleOpened = state.preview ? state.previewOpened : state.opened;
     const solved = solvedPuzzles();
-    const signature = JSON.stringify([year, berlin, state.preview, [...visibleOpened], solved.map(d => d.day), state.config.doors.map(d => [d.released, d.image, puzzleIdentity(d.puzzle)])]);
+    const signature = JSON.stringify([year, releaseMonth, berlin, state.preview, [...visibleOpened], solved.map(d => d.day), state.config.doors.map(d => [d.released, d.image, puzzleIdentity(d.puzzle)])]);
     if (signature === lastRender) return;
     lastRender = signature;
     $('calendar-status').textContent = state.preview ? 'Die CreeUnity-Werkstatt ist geöffnet'
-      : berlin.year < year || (berlin.year === year && berlin.month < 12) ? `Die Vorfreude beginnt · ab 1. Dezember ${year}`
-      : december && berlin.day <= 24 ? `${berlin.day}. Dezember · Dein Wintermoment wartet`
+      : berlin.year < year || (berlin.year === year && berlin.month < releaseMonth) ? `Die Vorfreude beginnt · ab 1. ${releaseMonthName()} ${year}`
+      : december && berlin.day <= 24 ? `${berlin.day}. ${releaseMonthName()} · ${releaseMonth === 11 ? 'Öffentlicher Testlauf' : 'Dein Wintermoment wartet'}`
       : '24 Türchen voller CreeUnity-Momente';
     const fragment = document.createDocumentFragment();
     for (const day of getDoorOrder(year)) {
       const door = state.config.doors.find(item => item.day === day);
       const opened = visibleOpened.has(door.day);
-      const unlocked = isDoorUnlocked(door.day, year, now) && door.released !== false;
+      const unlocked = isCalendarDayUnlocked(door.day, now) && door.released !== false;
       const today = december && berlin.day === door.day;
       const button = document.createElement('button');
       button.type = 'button';
       button.className = `door${opened ? ' is-opened' : ''}${today ? ' is-today' : ''}${door.day === 24 ? ' is-finale' : ''}`;
       button.dataset.day = door.day;
       const isSolved = solved.some(item => item.day === door.day);
-      button.setAttribute('aria-label', `Türchen ${door.day}${opened ? ', bereits geöffnet' : ''}${isSolved ? ', Rätsel gelöst' : ''}${today ? ', heute' : ''}${!unlocked && !state.preview ? `, öffnet am ${door.day}. Dezember ${year}` : ''}`);
+      button.setAttribute('aria-label', `Türchen ${door.day}${opened ? ', bereits geöffnet' : ''}${isSolved ? ', Rätsel gelöst' : ''}${today ? ', heute' : ''}${!unlocked && !state.preview ? `, öffnet am ${door.day}. ${releaseMonthName()} ${year}` : ''}`);
       // Gesperrte Türchen bleiben bedienbar, damit die freundliche Nachricht erreichbar ist.
       const ornament = document.createElement('span');
       ornament.className = 'door-decoration'; ornament.setAttribute('aria-hidden', 'true');
@@ -601,7 +613,7 @@ function initialize() {
 
   function renderActivePuzzle() {
     const door = state.config.doors.find(item => item.day === state.activeDay);
-    const available = door && (state.preview || (isDoorUnlocked(door.day, state.config.year) && door.released !== false));
+    const available = door && (state.preview || (isCalendarDayUnlocked(door.day) && door.released !== false));
     $('door-puzzle').hidden = !available || !door.puzzle;
     $('puzzle-answer').value = '';
     $('puzzle-answer').removeAttribute('aria-invalid');
@@ -652,7 +664,7 @@ function initialize() {
     if ($('puzzle-check').disabled) return;
     const day = state.activeDay;
     const door = state.config.doors.find(item => item.day === day);
-    if (!door?.puzzle || (!state.preview && (!isDoorUnlocked(day, state.config.year) || door.released === false))) return;
+    if (!door?.puzzle || (!state.preview && (!isCalendarDayUnlocked(day) || door.released === false))) return;
     const year = state.config.year;
     const preview = state.preview;
     const identity = puzzleIdentity(door.puzzle);
@@ -689,8 +701,8 @@ function initialize() {
     if (!state.config) return;
     const door = state.config.doors.find(item => item.day === day);
     if (!door) return;
-    if (!state.preview && !isDoorUnlocked(day, state.config.year)) {
-      toast(`Noch ein bisschen Vorfreude! Türchen ${day} öffnet ab dem ${day}. Dezember ${state.config.year} nach der täglichen Freigabe (Europe/Berlin). ✨`);
+    if (!state.preview && !isCalendarDayUnlocked(day)) {
+      toast(`Noch ein bisschen Vorfreude! Türchen ${day} öffnet ab dem ${day}. ${releaseMonthName()} ${state.config.year} nach der täglichen Freigabe (Europe/Berlin). ✨`);
       return;
     }
     if (!state.preview && door.released === false) {
@@ -706,7 +718,7 @@ function initialize() {
     catch (error) { feedback(error.message); }
     if (request !== doorRequest) return;
     state.activeDay = day;
-    $('door-eyebrow').textContent = `${state.preview ? 'VORSCHAU · ' : ''}${day}. DEZEMBER ${state.config.year} · CREEUNITY`;
+    $('door-eyebrow').textContent = `${state.preview ? 'VORSCHAU · ' : ''}${day}. ${releaseMonthName().toUpperCase()} ${state.config.year} · CREEUNITY`;
     $('door-title').textContent = door.title;
     $('door-image').alt = door.alt || `Grafik zu ${door.title}`;
     $('door-image-button').hidden = !image;
@@ -821,6 +833,7 @@ function initialize() {
   function populateAdmin() {
     state.editor = structuredClone(state.config);
     $('admin-year').value = state.config.year;
+    $('admin-release-month').value = String(state.config.releaseMonth ?? 12);
     $('admin-twitch').value = state.config.links.twitch;
     $('admin-discord').value = state.config.links.discord;
     $('preview-toggle').checked = state.preview;
@@ -866,13 +879,14 @@ function initialize() {
         : { type, ...(!answer && previousHash ? { answerHash: previousHash } : { answer }), ...(type === 'number' ? { fragment: $('admin-puzzle-fragment').value } : {}) };
     }
     state.editor.year = Number($('admin-year').value);
+    state.editor.releaseMonth = Number($('admin-release-month').value);
     state.editor.links = { twitch: $('admin-twitch').value.trim(), discord: $('admin-discord').value.trim() };
   }
   function applyEditor() {
     captureEditor();
     try {
       const config = validateConfig(state.editor);
-      const changedYear = state.config.year !== config.year;
+      const changedYear = state.config.year !== config.year || (state.config.releaseMonth ?? 12) !== (config.releaseMonth ?? 12);
       state.config = config;
       if (changedYear) readProgress();
       updateLinks(); renderCalendar();
@@ -992,7 +1006,7 @@ function initialize() {
   });
   $('preview-door').addEventListener('click', event => {
     if (!applyEditor()) return;
-    if (!state.preview && !isDoorUnlocked(state.selectedDay, state.config.year)) {
+    if (!state.preview && !isCalendarDayUnlocked(state.selectedDay)) {
       feedback('Aktiviere zuerst den Vorschaumodus, um dieses zukünftige Türchen zu testen.'); return;
     }
     openDoor(state.selectedDay, event.currentTarget);
@@ -1158,7 +1172,7 @@ function initialize() {
       const config = validateConfig(await response.json());
       const changed = JSON.stringify(config) !== JSON.stringify(state.published);
       if (changed) {
-        const yearChanged = state.config.year !== config.year;
+        const yearChanged = state.config.year !== config.year || (state.config.releaseMonth ?? 12) !== (config.releaseMonth ?? 12);
         state.published = structuredClone(config);
         if (puzzleDemo && state.preview) return false;
         state.config = config;

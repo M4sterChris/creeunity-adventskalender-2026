@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdir, realpath, rename, stat } from 'node:fs/prom
 import { resolve, relative, sep, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import { validateConfig, isDoorUnlocked } from '../script.js';
+import { validateConfig, isConfigDoorUnlocked } from '../script.js';
 import { privateAudioPath } from '../media.js';
 
 /** Neue Objektstruktur statt Entfernen einzelner Felder: Künftige Inhalte bleiben privat. */
@@ -11,7 +11,8 @@ export function selectReleasedContents(input, now = new Date()) {
   const config = validateConfig(input);
   return {
     version: 1, year: config.year, links: config.links, releaseMode: 'daily',
-    doors: config.doors.map(door => isDoorUnlocked(door.day, config.year, now) ? {
+    ...(config.releaseMonth !== undefined ? { releaseMonth: config.releaseMonth } : {}),
+    doors: config.doors.map(door => isConfigDoorUnlocked(door.day, config, now) ? {
       day: door.day, title: door.title, image: door.image, alt: door.alt, text: door.text, released: true,
       ...(door.audio ? { audio: door.audio } : {}),
       ...(door.puzzle ? { puzzle: {
@@ -40,6 +41,7 @@ export async function publishDoors({ source, target, now = new Date() }) {
   if (sourceRoot === targetRoot) throw new Error('Privates Inhalte- und öffentliches Website-Verzeichnis müssen getrennt sein.');
   const input = JSON.parse(await readFile(resolve(sourceRoot, 'doors-data.json'), 'utf8'));
   const output = selectReleasedContents(input, now);
+  const releaseDirectory = `assets/released/${output.year}${output.releaseMonth === 11 ? '/test-11' : ''}`;
   const copies = [];
   // Nur veröffentlichte Grafiken lesen. Ein fehlerhaftes zukünftiges Bild blockiert den heutigen Tag nicht.
   for (const door of output.doors.filter(item => item.released)) {
@@ -53,7 +55,7 @@ export async function publishDoors({ source, target, now = new Date() }) {
     const bytes = await readFile(imagePath);
     const hash = createHash('sha256').update(bytes).digest('hex').slice(0, 16);
     // Inhaltsabhängige Dateinamen verhindern, dass ein Browser eine alte Grafik cached.
-    const destination = `assets/released/${output.year}/day-${String(door.day).padStart(2, '0')}-${hash}${extname(path).toLowerCase()}`;
+    const destination = `${releaseDirectory}/day-${String(door.day).padStart(2, '0')}-${hash}${extname(path).toLowerCase()}`;
     copies.push({ destination, bytes });
     door.image = `./${destination}`;
   }
@@ -67,7 +69,7 @@ export async function publishDoors({ source, target, now = new Date() }) {
     if (!info.isFile() || info.size > 25 * 1024 * 1024) throw new Error('Eine veröffentlichte Audiodatei fehlt oder ist größer als 25 MB.');
     const bytes = await readFile(audioPath);
     const hash = createHash('sha256').update(bytes).digest('hex').slice(0, 16);
-    const destination = `assets/released/${output.year}/day-${String(door.day).padStart(2, '0')}-audio-${hash}${extname(path).toLowerCase()}`;
+    const destination = `${releaseDirectory}/day-${String(door.day).padStart(2, '0')}-audio-${hash}${extname(path).toLowerCase()}`;
     copies.push({ destination, bytes });
     door.audio = `./${destination}`;
   }

@@ -4,7 +4,7 @@ import { resolve, sep, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CalendarStore, SESSION_MS, PARTICIPANT_DELETE_AT } from './store.mjs';
 import { discordAuthorization, discordIdentity } from './discord.mjs';
-import { isDoorUnlocked, validateConfig } from '../script.js';
+import { isDoorUnlocked, isConfigDoorUnlocked, validateConfig } from '../script.js';
 import { selectReleasedContents, localImagePath } from '../tools/publish-doors.mjs';
 import { privateAudioPath } from '../media.js';
 import { sendFile } from '../tools/send-file.mjs';
@@ -130,9 +130,9 @@ export async function createCalendarServer({
         const statusTime = now();
         if (statusTime >= deleteAt) { store.cleanup(statusTime); fail(410, 'Die Teilnahme ist beendet.'); }
         if (!store.user(jar[SESSION_COOKIE], statusTime)) fail(401, 'Bitte melde dich erneut an.');
-        const statuses = config.doors.filter(door => door.puzzle && isDoorUnlocked(door.day, config.year, new Date(statusTime)))
+        const statuses = config.doors.filter(door => door.puzzle && isConfigDoorUnlocked(door.day, config, new Date(statusTime)))
           .map(door => store.status(user.id, config.year, door, statusTime));
-        const opened = store.opened(user.id, config.year).filter(day => isDoorUnlocked(day, config.year, new Date(statusTime)));
+        const opened = store.opened(user.id, config.year).filter(day => isConfigDoorUnlocked(day, config, new Date(statusTime)));
         send(200, { year: config.year, puzzles: statuses, opened, serverNow: statusTime }); return;
       }
       const openedPath = /^\/api\/opened\/(\d{4})\/(\d{1,2}|reset)$/.exec(pathname);
@@ -149,8 +149,8 @@ export async function createCalendarServer({
           send(200, { year: config.year, opened: store.resetOpened(user.id, config.year) }); return;
         }
         const day = Number(openedPath[2]);
-        if (!config.doors.some(door => door.day === day) || !isDoorUnlocked(day, config.year, new Date(openedTime))) fail(404, 'Dieses Türchen ist noch nicht verfügbar.');
-        send(200, { year: config.year, opened: store.openDoor(user.id, config.year, day).filter(value => isDoorUnlocked(value, config.year, new Date(openedTime))) }); return;
+        if (!config.doors.some(door => door.day === day) || !isConfigDoorUnlocked(day, config, new Date(openedTime))) fail(404, 'Dieses Türchen ist noch nicht verfügbar.');
+        send(200, { year: config.year, opened: store.openDoor(user.id, config.year, day).filter(value => isConfigDoorUnlocked(value, config, new Date(openedTime))) }); return;
       }
       const answerPath = /^\/api\/puzzles\/(\d{4})\/(\d{1,2})\/answer$/.exec(pathname);
       if (answerPath && request.method === 'POST') {
@@ -163,7 +163,7 @@ export async function createCalendarServer({
         if (!store.user(jar[SESSION_COOKIE], answerTime)) fail(401, 'Bitte melde dich erneut an.');
         const day = Number(answerPath[2]);
         const door = config.doors.find(item => item.day === day);
-        if (Number(answerPath[1]) !== config.year || !door?.puzzle || !isDoorUnlocked(day, config.year, new Date(answerTime))) fail(404, 'Dieses Rätsel ist noch nicht verfügbar.');
+        if (Number(answerPath[1]) !== config.year || !door?.puzzle || !isConfigDoorUnlocked(day, config, new Date(answerTime))) fail(404, 'Dieses Rätsel ist noch nicht verfügbar.');
         const result = store.answer(user.id, config.year, door, body.answer, answerTime);
         send(result.lockedUntil ? 429 : 200, result, result.lockedUntil ? { 'Retry-After': String(Math.ceil((result.lockedUntil - answerTime) / 1000)) } : {});
         return;
@@ -176,18 +176,18 @@ export async function createCalendarServer({
       let allowedRoot = root;
       if (PUBLIC_FILES.has(pathname.slice(1)) || pathname === '/') file = resolve(root, pathname === '/' ? 'index.html' : pathname.slice(1));
       else if (/^\/assets\/[a-zA-Z0-9_./-]+$/.test(pathname) && !pathname.split('/').includes('..')) {
-        const dated = /^\/assets\/released\/(\d{4})\/day-(\d{2})-/.exec(pathname);
-        if (dated && !isDoorUnlocked(Number(dated[2]), Number(dated[1]), new Date(time))) fail(404, 'Nicht gefunden.');
+        const dated = /^\/assets\/released\/(\d{4})\/(?:test-(11)\/)?day-(\d{2})-/.exec(pathname);
+        if (dated && !isDoorUnlocked(Number(dated[3]), Number(dated[1]), new Date(time), Number(dated[2] || 12))) fail(404, 'Nicht gefunden.');
         file = resolve(root, `.${pathname}`);
         allowedRoot = resolve(root, 'assets');
       } else if (/^\/images\/[a-zA-Z0-9_./-]+$/.test(pathname) && !pathname.split('/').includes('..')) {
         const config = await readCalendar();
-        if (!config.doors.some(door => isDoorUnlocked(door.day, config.year, new Date(time)) && /^(?:\.\/)?images\//.test(door.image) && `/${localImagePath(door.image)}` === pathname)) fail(404, 'Nicht gefunden.');
+        if (!config.doors.some(door => isConfigDoorUnlocked(door.day, config, new Date(time)) && /^(?:\.\/)?images\//.test(door.image) && `/${localImagePath(door.image)}` === pathname)) fail(404, 'Nicht gefunden.');
         file = resolve(contentDir, `.${pathname}`);
         allowedRoot = resolve(contentDir, 'images');
       } else if (/^\/audio\/[a-zA-Z0-9_./-]+$/.test(pathname) && !pathname.split('/').includes('..')) {
         const config = await readCalendar();
-        if (!config.doors.some(door => door.audio && isDoorUnlocked(door.day, config.year, new Date(time)) && /^(?:\.\/)?audio\//.test(door.audio) && `/${privateAudioPath(door.audio)}` === pathname)) fail(404, 'Nicht gefunden.');
+        if (!config.doors.some(door => door.audio && isConfigDoorUnlocked(door.day, config, new Date(time)) && /^(?:\.\/)?audio\//.test(door.audio) && `/${privateAudioPath(door.audio)}` === pathname)) fail(404, 'Nicht gefunden.');
         file = resolve(contentDir, `.${pathname}`);
         allowedRoot = resolve(contentDir, 'audio');
       } else fail(404, 'Nicht gefunden.');

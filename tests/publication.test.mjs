@@ -170,3 +170,16 @@ test('Öffentliche Produktionsdatei enthält explizite Veröffentlichungsangaben
     assert.equal(door.text, ''); assert.equal(door.image, './assets/placeholder.svg');
   }
 });
+
+test('Öffentlicher November-Test gibt1–19 frei, niemals Schlüssel, Antworten, Prüfhashes oder Satzteile',()=>{
+  const input=privateData();input.releaseMonth=11;input.apiKey='PRIVATE-API-KEY';
+  const output=selectReleasedContents(input,new Date('2026-11-19T12:00:00Z'));
+  assert.equal(output.releaseMonth,11);assert.equal(output.doors.filter(d=>d.released).length,19);
+  assert.equal(output.apiKey,undefined);
+  for(const door of output.doors){
+    if(door.day<=19)assert.deepEqual(door.puzzle,{type:input.doors[door.day-1].puzzle.type,serverOnly:true});
+    else assert.equal(door.puzzle,undefined);
+    for(const key of ['answer','answerHash','fragment','solution','apiKey'])assert.ok(!(key in door));
+  }
+  assert.doesNotMatch(JSON.stringify(output),/PRIVATE-API-KEY|GEHEIM-BUCHSTABEN|GEHEIM-LOESUNG/);
+});

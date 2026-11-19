@@ -1,7 +1,7 @@
 // Wiederholbarer, ausschließlich lesender Live-Test ohne GitHub-Zugriffsschlüssel.
 // Prüft den aktuellen öffentlichen Stand; bewertet keine frühere Git-Historie.
 import assert from 'node:assert/strict';
-import { getBerlinDateParts, isDoorUnlocked, validateConfig } from '../script.js';
+import { getBerlinDateParts, isDoorUnlocked, isConfigDoorUnlocked, validateConfig } from '../script.js';
 import { CONTENT_REPOSITORY } from '../github-editor.js';
 
 const website = 'https://m4sterchris.github.io/creeunity-adventskalender-2026/';
@@ -26,7 +26,11 @@ try {
   const rawConfig = await response.json();
   const config = validateConfig(rawConfig);
   assert.equal(config.releaseMode, 'daily', 'Die Website benötigt die gefilterte Tagesdatei.');
-  const future = config.doors.filter(door => !isDoorUnlocked(door.day, config.year, now));
+  const future = config.doors.filter(door => !isConfigDoorUnlocked(door.day, config, now));
+  for (const door of rawConfig.doors) {
+    if (door.puzzle) assert.deepEqual(door.puzzle, { type: door.puzzle.type, serverOnly: true }, 'Private Lösungsdaten wurden öffentlich ausgegeben.');
+    for (const key of ['answer', 'answerHash', 'fragment', 'solution', 'solutionPath']) assert.ok(!(key in door), 'Private Lösungsdaten wurden öffentlich ausgegeben.');
+  }
   for (const door of future) {
     // Nur Nummern und Status melden, niemals eventuell versehentlich veröffentlichte Werte ausgeben.
     const neutral = door.released === false && door.text === '' && door.image === './assets/placeholder.svg'
@@ -46,9 +50,9 @@ try {
   assert.ok(!forbidden, 'Private Arbeitsdateien oder ungeschützte Bilderpfade im öffentlichen Repository gefunden.');
   const publishedImages = tree.tree.filter(entry => entry.type === 'blob' && /^assets\/released\//.test(entry.path));
   for (const entry of publishedImages) {
-    const match = /^assets\/released\/(\d{4})\/day-(\d{2})-(?:audio-)?[a-f0-9]+\.[a-z0-9]+$/i.exec(entry.path);
+    const match = /^assets\/released\/(\d{4})\/(?:test-(11)\/)?day-(\d{2})-(?:audio-)?[a-f0-9]+\.[a-z0-9]+$/i.exec(entry.path);
     assert.ok(match, 'Eine veröffentlichte Bilddatei kann keinem Freigabetag zugeordnet werden.');
-    assert.ok(isDoorUnlocked(Number(match[2]), Number(match[1]), now), 'Eine zukünftige Tagesgrafik liegt bereits im öffentlichen Repository.');
+    assert.ok(isDoorUnlocked(Number(match[3]), Number(match[1]), now, Number(match[2] || 12)), 'Eine zukünftige Tagesgrafik liegt bereits im öffentlichen Repository.');
   }
   console.log('PASS: Keine zukünftigen Tagesgrafiken oder privaten Arbeitsdateien im aktuellen öffentlichen Repository.');
 

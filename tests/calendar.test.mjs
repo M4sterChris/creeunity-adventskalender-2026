@@ -67,3 +67,16 @@ test('Gemischte Reihenfolge bleibt stabil und enthält jeden Tag genau einmal', 
   assert.notDeepEqual(order, Array.from({ length: 24 }, (_, i) => i + 1));
   assert.notDeepEqual(order, getDoorOrder(2027));
 });
+
+test('November-Test öffnet am 19. genau1–19; Dezember bleibt der Standard',()=>{
+  const now=new Date('2026-11-19T12:00:00Z');
+  for(let day=1;day<=24;day++){
+    assert.equal(isDoorUnlocked(day,2026,now,11),day<=19);
+    assert.equal(isDoorUnlocked(day,2026,now),false);
+  }
+  assert.equal(isDoorUnlocked(1,2026,new Date('2026-10-31T22:59:59Z'),11),false);
+  assert.equal(isDoorUnlocked(1,2026,new Date('2026-10-31T23:00:00Z'),11),true);
+  assert.equal(isDoorUnlocked(24,2026,new Date('2026-12-01T12:00:00Z'),11),true);
+  for(const value of [0,10,13,'11',null])assert.throws(()=>validateConfig({...config,releaseMonth:value}),/Freigabemonat/);
+  assert.equal(validateConfig({...config,releaseMonth:11}).releaseMonth,11);
+});

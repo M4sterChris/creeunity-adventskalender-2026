@@ -12,6 +12,8 @@ Datensparsame Teilnehmeranmeldung: Von Discord wird nur die ID dauerhaft überno
 
 ## Wie die Freigabe funktioniert
 
+Für den ausdrücklich freigegebenen öffentlichen November-Test steht `releaseMonth` im privaten Kalender auf `11`: Am 19. November sind1–19 verfügbar,20–24 bleiben gesperrt. Standard ohne dieses Feld ist Dezember (`12`). Im Editor unter **Freigabemonat** wieder auf Dezember stellen und privat speichern. November-Testgrafiken liegen getrennt unter `assets/released/JAHR/test-11/`; bereits öffentlich gewordene Dateien bleiben in der Git-Historie. Codes, Prüfwerte, Satzteile und Zugangsschlüssel werden auch im Test nicht veröffentlicht. Der Test aktiviert keinen bislang fehlenden Prüfserver.
+
 Das private Inhalte-Repository enthält die vollständige `doors-data.json` und die Tagesgrafiken unter `images/`. Seine GitHub Action prüft die Runner-Zeit in **Europe/Berlin** und überträgt ausschließlich bereits freigegebene Tage ins öffentliche Repository. Künftige Titel, Texte, Bildbeschreibungen und Bildpfade werden durch neutrale Platzhalter ersetzt. Nur freigegebene lokale Bilddateien werden kopiert. Die öffentliche Website wird danach automatisch neu bereitgestellt.
 
 Im November/Dezember ist der erste geplante Lauf um **23:03 UTC = 00:03 Uhr Berlin am Folgetag**. Weitere Läufe um 00:18, 00:43 und 01:13 Uhr Berlin holen Verzögerungen oder ausgefallene Läufe nach. Jeder Lauf veröffentlicht alle bis dahin fälligen Tage. Ein Push mit geänderten Inhalten oder ein manueller Start der Action führt ebenfalls zu einer Prüfung – ohne künftige Türchen vorzeitig freizugeben.
