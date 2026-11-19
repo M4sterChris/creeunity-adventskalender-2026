@@ -247,7 +247,8 @@ test('Discord-Abbruch erteilt keine Sitzung und verbraucht den State', async t =
   assert.equal((await f.finish(start)).headers.get('location'), '/?login=failed#kalender');
 });
 
-test('Eine Sitzung bleibt 14 Tage gültig und erfordert danach eine neue Anmeldung', async t => {
+test('Eine Sitzung bleibt 30 Tage gültig und erfordert danach eine neue Anmeldung', async t => {
+  assert.equal(SESSION_MS, 30 * 24 * 60 * 60 * 1000);
   const f = await fixture(t); const cookie = await f.login();
   f.clock.value += SESSION_MS - 1;
   assert.equal((await f.get('/api/session', cookie).then(response => response.json())).user.authenticated, true);
@@ -266,7 +267,7 @@ test('Es werden nur die Discord-ID und technische Kontodaten gespeichert, keine 
     assert.equal(db.prepare('SELECT id FROM users').get().id, '123456789012345678');
     const saved = db.prepare('SELECT hash, expires FROM sessions').get();
     assert.notEqual(saved.hash, cookie.split('=')[1]);
-    assert.equal(saved.expires, f.clock.value + 14 * 24 * 60 * 60 * 1000);
+    assert.equal(saved.expires, f.clock.value + 30 * 24 * 60 * 60 * 1000);
   } finally { db.close(); }
 });
 

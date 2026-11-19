@@ -6,7 +6,7 @@ import { createWorker } from '../server/cloudflare/worker.mjs';
 import { D1CalendarStore } from '../server/cloudflare/store.mjs';
 import { rangedAsset } from '../server/cloudflare/range.mjs';
 import { LOCK_MS, SESSION_MS, PARTICIPANT_DELETE_AT } from '../server/policy.mjs';
-import { hostedCalendarLocation } from '../script.js';
+import { hostedCalendarLocation, removeLegacyCalendarProgress } from '../script.js';
 
 // D1-shaped real SQLite adapter. The same SQL is additionally exercised by
 // Wrangler's workerd runtime before deployment; no account credentials in tests.
@@ -40,6 +40,21 @@ test('Old GitHub Pages bookmarks lead to the working hosted calendar and preserv
   assert.equal(hostedCalendarLocation('https://m4sterchris.github.io/another-calendar/'), null);
   assert.equal(hostedCalendarLocation('https://m4sterchris.github.io.evil.example/creeunity-adventskalender-2026/'), null);
   assert.equal(hostedCalendarLocation('https://creeunity-adventskalender-2026.creeunity-m4sterchris.workers.dev/'), null);
+});
+
+test('Legacy local participant progress is removed without touching editor settings', () => {
+  const storage = {
+    'creeunity:opened:2026': '[1]',
+    'creeunity:test-opened:2026:11': '[2]',
+    'creeunity:solved:2026': '{}',
+    'creeunity:opened:2025': '[3]',
+    'creeunity:admin-draft:v1': 'draft',
+    unrelated: 'keep',
+    removeItem(key) { delete this[key]; },
+  };
+  removeLegacyCalendarProgress(storage);
+  assert.deepEqual(Object.keys(storage).filter(key => key.startsWith('creeunity:')), ['creeunity:admin-draft:v1']);
+  assert.equal(storage.unrelated, 'keep');
 });
 
 async function fixture(t) {
@@ -84,7 +99,7 @@ async function fixture(t) {
     const response = await call(callback, { session: cookie });
     assert.equal(response.headers.get('Location'), '/?login=success#kalender');
     const session = response.headers.getSetCookie().find(value => value.startsWith('__Host-creeunity_session='));
-    assert.match(session, /HttpOnly; SameSite=Lax; Max-Age=1209600; Secure/);
+    assert.match(session, /HttpOnly; SameSite=Lax; Max-Age=2592000; Secure/);
     return { session: session.split(';')[0], cookie, callback };
   };
   const answer = (session, value, day = 1) => call(`/api/puzzles/2026/${day}/answer`, { method: 'POST', body: { answer: value }, session });

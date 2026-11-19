@@ -98,9 +98,18 @@ export function hostedCalendarLocation(value) {
   return `https://creeunity-adventskalender-2026.creeunity-m4sterchris.workers.dev/${url.search}${url.hash}`;
 }
 
+export function removeLegacyCalendarProgress(storage) {
+  for (const key of Object.keys(storage)) {
+    if (/^creeunity:(?:opened|test-opened|solved):/.test(key)) storage.removeItem(key);
+  }
+}
+
 if (typeof document !== 'undefined') {
   const hosted = hostedCalendarLocation(location.href);
-  if (hosted) location.replace(hosted);
+  if (hosted) {
+    try { removeLegacyCalendarProgress(localStorage); } catch { /* Storage is optional. */ }
+    location.replace(hosted);
+  }
   else initialize();
 }
 
@@ -155,6 +164,7 @@ function initialize() {
     $('participant-logout').hidden = !participant.user;
     $('participant-retry').hidden = !participant.error;
     $('participant-data-controls').hidden = !participant.user || state.preview;
+    $('reset-progress').disabled = !participant.user || state.preview;
     $('participant-status').textContent = participant.loading ? 'Discord-Anmeldung wird geladen …'
       : participant.closed ? 'Die Teilnahme ist beendet. Die gespeicherten Teilnehmerdaten wurden gelöscht.'
       : participant.error || (participant.user ? 'Mit Discord angemeldet.'
@@ -247,7 +257,7 @@ function initialize() {
     if (!deleteAccountArmed) {
       deleteAccountArmed = true;
       $('delete-account').textContent = 'Ja, meine Kalenderdaten endgültig löschen';
-      $('account-feedback').textContent = 'Damit werden dein gesamter Kontofortschritt einschließlich geöffneter Türchen und alle deine Sitzungen gelöscht. Lokale Gastöffnungen in diesem Browser werden ebenfalls zurückgesetzt. Klicke zur Bestätigung noch einmal.';
+      $('account-feedback').textContent = 'Damit werden dein gesamter Kontofortschritt einschließlich geöffneter Türchen und alle deine Sitzungen gelöscht. Klicke zur Bestätigung noch einmal.';
       return;
     }
     $('delete-account').disabled = true;
@@ -256,7 +266,7 @@ function initialize() {
     try {
       await participantAPI.deleteAccount();
       participant.user = null; state.solved = {}; serverStatuses = {}; state.opened.clear();
-      writeStorage(progressKey(), null); writeStorage(solvedKey(), null);
+      clearLegacyProgress();
       renderParticipant(); renderCalendar(); renderActivePuzzle();
       $('account-feedback').textContent = 'Deine Kalenderdaten und alle Anmeldesitzungen wurden gelöscht.';
     } catch { $('account-feedback').textContent = 'Die Löschung ist gerade nicht verfügbar. Bitte versuche es erneut.'; }
@@ -366,7 +376,6 @@ function initialize() {
     resetPlayer($('door-audio'));
     $('door-audio-section').hidden = true;
     $('audio-error').hidden = true;
-    $('audio-download').removeAttribute('href');
   }
   function resetEditorAudio() { ++editorAudioRequest; resetPlayer($('admin-audio-preview')); $('admin-audio-preview').hidden = true; }
   async function renderDoorAudio(door) {
@@ -378,7 +387,6 @@ function initialize() {
       const url = await resolveDoorAudio(door);
       if (request !== audioRequest || !$('door-modal').open) return;
       $('door-audio').src = url;
-      $('audio-download').href = url;
     } catch { if (request === audioRequest) $('audio-error').hidden = false; }
   }
   async function updateEditorAudio() {
@@ -419,8 +427,12 @@ function initialize() {
     toastTimeout = setTimeout(() => { $('toast').hidden = true; }, 6500);
   }
   function feedback(message) { $('admin-feedback').textContent = message; }
-  const progressKey = () => state.config.releaseMonth === 11 ? `creeunity:test-opened:${state.config.year}:11` : `creeunity:opened:${state.config.year}`;
-  const solvedKey = () => `creeunity:solved:${state.config.year}`;
+  function clearLegacyProgress() {
+    try {
+      removeLegacyCalendarProgress(localStorage);
+    } catch { /* Guests can view the calendar even if browser storage is blocked. */ }
+  }
+  clearLegacyProgress();
   // Testfortschritt bleibt bei F5 erhalten, überschreibt aber nie echte Öffnungen/Lösungen.
   const previewProgressKey = () => `creeunity:preview-progress:v1:${puzzleDemo ? 'puzzle' : designPreview ? 'design' : 'editor'}:${state.config.year}`;
 
@@ -459,10 +471,7 @@ function initialize() {
   }
 
   function readGuestOpened() {
-    try {
-      const saved = JSON.parse(readStorage(progressKey()) || '[]');
-      state.opened = new Set(Array.isArray(saved) ? saved.filter(n => Number.isInteger(n) && n >= 1 && n <= 24) : []);
-    } catch { state.opened = new Set(); }
+    state.opened = new Set();
   }
   function readProgress() {
     readGuestOpened();
@@ -744,9 +753,10 @@ function initialize() {
       state.previewOpened.add(day);
       stored = savePreviewProgress();
     } else {
-      state.opened.add(day);
-      if (participant.user && participant.available) persistOpened(state.config.year, day);
-      else stored = writeStorage(progressKey(), JSON.stringify([...state.opened]));
+      if (participant.user && participant.available) {
+        state.opened.add(day);
+        persistOpened(state.config.year, day);
+      }
     }
     renderCalendar();
     // Raster-Buttons wurden ersetzt; Editor-Schaltflächen bleiben als Fokusziel erhalten.
@@ -805,14 +815,14 @@ function initialize() {
     });
   });
   $('info-button').addEventListener('click', () => {
-    $('storage-note').textContent = participant.user ? 'Geöffnete Türchen, Sammlung und Rätselpausen sind mit deinem Discord-Konto gespeichert. Zurücksetzen entfernt nur die geöffneten Türchen, auf allen Geräten.' : 'Ohne Anmeldung bleiben geöffnete Türchen nur in diesem Browser. Nach der Anmeldung wird der im Konto gespeicherte Stand verwendet.';
+    $('storage-note').textContent = participant.user ? 'Geöffnete Türchen, Sammlung und Rätselpausen sind mit deinem Discord-Konto gespeichert. Zurücksetzen entfernt nur die geöffneten Türchen, auf allen Geräten.' : 'Ohne Anmeldung wird kein Fortschritt gespeichert. Melde dich mit Discord an, um deine Sammlung auf allen Geräten zu behalten.';
     $('info-modal').showModal();
   });
   $('reset-progress').addEventListener('click', async () => {
-    if (!state.config) return;
+    if (!state.config || !participant.user || state.preview) return;
     if (!resetArmed) {
       resetArmed = true; $('reset-progress').textContent = 'Wirklich zurücksetzen? Erneut klicken';
-      $('storage-note').textContent = participant.user ? 'Das setzt die geöffneten Türchen in deinem Konto auf allen Geräten zurück. Gelöste Rätsel und Pausen bleiben erhalten.' : 'Das setzt die geöffneten Türchen in diesem Browser zurück.';
+      $('storage-note').textContent = 'Das setzt die geöffneten Türchen in deinem Konto auf allen Geräten zurück. Gelöste Rätsel und Pausen bleiben erhalten.';
       return;
     }
     const account = accountEpoch;
@@ -828,13 +838,11 @@ function initialize() {
         if (account !== accountEpoch || year !== state.config.year) return;
       }
       state.opened.clear();
-      const stored = signedIn || writeStorage(progressKey(), null);
       renderCalendar();
-      $('storage-note').textContent = signedIn ? 'Geöffnete Türchen wurden im Konto auf allen Geräten zurückgesetzt. Deine Sammlung und Rätselpausen bleiben erhalten.'
-        : stored ? 'Geöffnete Türchen wurden in diesem Browser zurückgesetzt.' : 'Für diesen Besuch zurückgesetzt. Dein Browser blockiert Änderungen am lokalen Speicher.';
+      $('storage-note').textContent = 'Geöffnete Türchen wurden im Konto auf allen Geräten zurückgesetzt. Deine Sammlung und Rätselpausen bleiben erhalten.';
     } catch { $('storage-note').textContent = 'Zurücksetzen ist gerade nicht möglich. Bitte versuche es erneut.'; }
     finally {
-      --openedWrites; resetArmed = false; $('reset-progress').disabled = false;
+      --openedWrites; resetArmed = false; $('reset-progress').disabled = !participant.user || state.preview;
       $('reset-progress').textContent = 'Geöffnete Türchen zurücksetzen';
     }
   });
@@ -1198,7 +1206,6 @@ function initialize() {
   setInterval(() => { renderCalendar(); renderAttemptState(); }, 1000);
   setInterval(() => { if (!document.hidden) { refreshPublicConfiguration(); refreshParticipant(); } }, 60000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { renderCalendar(); refreshPublicConfiguration(); refreshParticipant(); } });
-  window.addEventListener('storage', event => { if (state.config && event.key === progressKey() && !participant.user) { readProgress(); renderCalendar(); if ($('door-modal').open) renderActivePuzzle(); } });
   window.addEventListener('pagehide', savePreviewProgress);
   loadConfiguration();
   const loginResult = new URL(location.href).searchParams.get('login');

@@ -43,7 +43,7 @@ GitHub-Repository gebunden. Ohne eingerichteten Deployment-Workflow werden seine
 Git-Änderungen erst nach erneutem Deployment auf Cloudflare wirksam.
 
 Zehn Fehlversuche sperren ein Konto/Tag/Jahr für 15 Minuten. D1-Transaktionen
-erzwingen das auch bei parallelen Anfragen. Cookie-Laufzeit: bis zu 14 Tage,
+erzwingen das auch bei parallelen Anfragen. Cookie-Laufzeit: bis zu 30 Tage,
 Secure/HttpOnly/SameSite=Lax. Discord-Klartexttokens und Profilfelder werden nicht
 gespeichert; Sitzungen enthalten ausschließlich Hashes. Kontolöschung erfolgt
 atomar mit zugehörigen Öffnungen, Lösungen, Versuchen und Sitzungen.

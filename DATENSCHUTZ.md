@@ -6,7 +6,7 @@ Stand: 19. November 2026. Interne Arbeitsunterlage für den Kalender. Kalenderse
 
 - Teilnehmer melden sich über die offizielle Discord-Anmeldung an. Der Kalender fragt niemals nach einem Discord-Passwort.
 - Von Discord wird dauerhaft ausschließlich die ID übernommen. Profilnamen, Profilbilder, E-Mail-Adressen, Nachrichten und Serverlisten werden nicht gespeichert. Eine frühere lokale Namensspalte wird entfernt.
-- Die Anmeldung bleibt bis zu 14 Tage über ein technisch notwendiges Cookie bestehen. Darin steht nur ein zufälliger Sitzungsschlüssel. Der Server speichert seinen Hash und das Ablaufdatum.
+- Die Anmeldung bleibt bis zu 30 Tage über ein technisch notwendiges Cookie bestehen. Darin steht nur ein zufälliger Sitzungsschlüssel, kein Fortschritt. Der Server speichert seinen Hash und das Ablaufdatum.
 - Automatische Löschung der aktiven Teilnehmerdaten am 1. Februar 2027 ab 00:00 Uhr Berliner Zeit. Sitzungen werden auf dieses Datum begrenzt.
 - Zweck der gespeicherten Kalenderdaten: geräteübergreifend geöffnete Türchen, eigener Lösungsstand und Satzteile sowie zehn Fehlversuche pro Türchen mit anschließender 15-Minuten-Pause. Für Öffnungen werden nur Konto-Zuordnung, Kalenderjahr und Türchennummer gespeichert, keine Besuchszeitpunkte. Kein Tracking, kein Teilnehmerverzeichnis und keine Weiterverwendung für Werbung.
 
@@ -31,7 +31,7 @@ Discord liefert bei `identify` ein Basisprofil. Die Anwendung liest daraus die I
 
 Die Löschroutine läuft beim aktiven Server jede Minute sowie bei Start und Zugriff nach dem Stichtag. Sie bereinigt die aktive Datenbank und ihren WAL. Bei einem ausgeschalteten Server ist eine externe Löschung beziehungsweise eine rechtzeitige Wiederinbetriebnahme nötig. Backups, Hostersnapshots, Protokolle und Discords eigene Verarbeitung werden dadurch nicht gelöscht. Ein gelöschtes Kalenderkonto lässt sich vor dem Stichtag neu anlegen und erhält dann neue Versuchszähler. Derzeit ist kein zusätzlicher Anti-Missbrauchsdatensatz nach einer Kontolöschung vorgesehen.
 
-Mit Anmeldung werden geöffnete Türchen im Konto gespeichert und in allen Browsersitzungen desselben Kontos wiederhergestellt. Ohne Anmeldung bleiben Öffnungen lokal im Browser; diese Gastwerte werden beim Anmelden nicht automatisch übertragen. Das Zurücksetzen im Konto entfernt seine Öffnungen für das aktuelle Kalenderjahr, ohne gelöste Rätsel und Sperren zu verändern. Auskunft, Kontolöschung und Stichtagslöschung umfassen die servergespeicherten Öffnungen. Die bestätigte Kontolöschung setzt zusätzlich lokale Gastöffnungen des aktuellen Kalenderjahrs im ausführenden Browser zurück. Auf anderen Geräten verbleibender lokaler Gastspeicher muss dort vom Nutzer gelöscht werden. Vorschau- und Editorwerte bleiben getrennt von Teilnehmerdaten.
+Teilnehmerfortschritt wird ausschließlich im angemeldeten Konto gespeichert und in allen Browsersitzungen desselben Kontos wiederhergestellt. Ohne Anmeldung können Türchen angesehen werden; Öffnungen, Lösungen und Fehlversuche werden dabei weder im lokalen Browserspeicher noch in zusätzlichen Cookies gespeichert. Alte lokale Fortschrittsdaten werden beim Laden der jeweiligen Kalenderadresse entfernt. Das Zurücksetzen im Konto entfernt seine Öffnungen für das aktuelle Kalenderjahr, ohne gelöste Rätsel und Sperren zu verändern. Auskunft, Kontolöschung und Stichtagslöschung umfassen die servergespeicherten Öffnungen. Vorschau- und Editorwerte bleiben getrennt von Teilnehmerdaten.
 
 ## Vor dem Livebetrieb konkret zu ergänzen
 
