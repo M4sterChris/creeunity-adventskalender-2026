@@ -6,158 +6,237 @@
     "discord": ""
   },
   "releaseMode": "daily",
+  "releaseMonth": 11,
   "doors": [
     {
       "day": 1,
-      "title": "Türchen 1 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Funksignal und Codewahl",
+      "image": "./assets/released/2026/test-11/day-01-34f22ee337c7ef28.png",
+      "alt": "Rätselgrafik zu Funksignal und Codewahl",
       "text": "",
-      "released": false
+      "released": true,
+      "audio": "./assets/released/2026/test-11/day-01-audio-510b473214b9bbc5.mp3",
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 2,
-      "title": "Türchen 2 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Verknüpfte Packaufträge",
+      "image": "./assets/released/2026/test-11/day-02-16e3f40657784172.png",
+      "alt": "Rätselgrafik zu Verknüpfte Packaufträge",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 3,
-      "title": "Türchen 3 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Der neue Tresorcode",
+      "image": "./assets/released/2026/test-11/day-03-a329d3f581a56d2e.png",
+      "alt": "Rätselgrafik zu Der neue Tresorcode",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 4,
-      "title": "Türchen 4 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Fehler in der Pixelprüfung",
+      "image": "./assets/released/2026/test-11/day-04-5522c2614242c468.png",
+      "alt": "Rätselgrafik zu Fehler in der Pixelprüfung",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 5,
-      "title": "Türchen 5 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Die Creeper-Sitzordnung",
+      "image": "./assets/released/2026/test-11/day-05-fbdff81deb7bdb69.png",
+      "alt": "Rätselgrafik zu Die Creeper-Sitzordnung",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 6,
-      "title": "Türchen 6 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Keksgruppen im Backstream",
+      "image": "./assets/released/2026/test-11/day-06-3e79144a36a16762.png",
+      "alt": "Rätselgrafik zu Keksgruppen im Backstream",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 7,
-      "title": "Türchen 7 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Funkfolge aus der Werkstatt",
+      "image": "./assets/released/2026/test-11/day-07-c733315afc9ad032.png",
+      "alt": "Rätselgrafik zu Funkfolge aus der Werkstatt",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 8,
-      "title": "Türchen 8 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Die Lichtschablonen",
+      "image": "./assets/released/2026/test-11/day-08-7c5b30f7af09faca.png",
+      "alt": "Rätselgrafik zu Die Lichtschablonen",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 9,
-      "title": "Türchen 9 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Der verschlüsselte Zahlenbrief",
+      "image": "./assets/released/2026/test-11/day-09-a8008721d2137668.png",
+      "alt": "Rätselgrafik zu Der verschlüsselte Zahlenbrief",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 10,
-      "title": "Türchen 10 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Kabelsalat in der Weihnachtswerkstatt",
+      "image": "./assets/released/2026/test-11/day-10-e684c185587f1279.png",
+      "alt": "Rätselgrafik zu Kabelsalat in der Weihnachtswerkstatt",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 11,
-      "title": "Türchen 11 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Drei Aufträge, ein Vorrat",
+      "image": "./assets/released/2026/test-11/day-11-a820bc04f43720eb.png",
+      "alt": "Rätselgrafik zu Drei Aufträge, ein Vorrat",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 12,
-      "title": "Türchen 12 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Vier Freunde, acht Aussagen",
+      "image": "./assets/released/2026/test-11/day-12-f51b9abbd4ea1b18.png",
+      "alt": "Rätselgrafik zu Vier Freunde, acht Aussagen",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 13,
-      "title": "Türchen 13 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Der Code im Stream",
+      "image": "./assets/released/2026/test-11/day-13-dc4ae2714259eeca.png",
+      "alt": "Rätselgrafik zu Der Code im Stream",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 14,
-      "title": "Türchen 14 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Das verkürzte Echo",
+      "image": "./assets/released/2026/test-11/day-14-b1726ab4058b27b1.png",
+      "alt": "Rätselgrafik zu Das verkürzte Echo",
       "text": "",
-      "released": false
+      "released": true,
+      "audio": "./assets/released/2026/test-11/day-14-audio-bdc8499f40a5ad7f.mp3",
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 15,
-      "title": "Türchen 15 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Der verlorene Filmschnitt",
+      "image": "./assets/released/2026/test-11/day-15-11607a836227523b.png",
+      "alt": "Rätselgrafik zu Der verlorene Filmschnitt",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 16,
-      "title": "Türchen 16 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Der beschädigte Speicherchip",
+      "image": "./assets/released/2026/test-11/day-16-82991a757a03bf80.png",
+      "alt": "Rätselgrafik zu Der beschädigte Speicherchip",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 17,
-      "title": "Türchen 17 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Spuren im Neuschnee",
+      "image": "./assets/released/2026/test-11/day-17-0348632b4d4dd173.png",
+      "alt": "Rätselgrafik zu Spuren im Neuschnee",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 18,
-      "title": "Türchen 18 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Wenn Tee zu Eis wird",
+      "image": "./assets/released/2026/test-11/day-18-efed3581ba627f52.png",
+      "alt": "Rätselgrafik zu Wenn Tee zu Eis wird",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 19,
-      "title": "Türchen 19 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Die gelöschte Übergabe",
+      "image": "./assets/released/2026/test-11/day-19-6f528bfe4c05049f.png",
+      "alt": "Rätselgrafik zu Die gelöschte Übergabe",
       "text": "",
-      "released": false
+      "released": true,
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 20,
