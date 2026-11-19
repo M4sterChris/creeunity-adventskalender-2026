@@ -5,26 +5,10 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { validateConfig, isConfigDoorUnlocked } from '../script.js';
 import { privateAudioPath } from '../media.js';
+import { selectReleasedContents } from './released-calendar.mjs';
+export { selectReleasedContents } from './released-calendar.mjs';
 
 /** Neue Objektstruktur statt Entfernen einzelner Felder: Künftige Inhalte bleiben privat. */
-export function selectReleasedContents(input, now = new Date()) {
-  const config = validateConfig(input);
-  return {
-    version: 1, year: config.year, links: config.links, releaseMode: 'daily',
-    ...(config.releaseMonth !== undefined ? { releaseMonth: config.releaseMonth } : {}),
-    doors: config.doors.map(door => isConfigDoorUnlocked(door.day, config, now) ? {
-      day: door.day, title: door.title, image: door.image, alt: door.alt, text: door.text, released: true,
-      ...(door.audio ? { audio: door.audio } : {}),
-      ...(door.puzzle ? { puzzle: {
-        type: door.puzzle.type,
-        serverOnly: true,
-      } } : {}),
-    } : {
-      day: door.day, title: `Türchen ${door.day} – Noch ein bisschen Vorfreude`,
-      image: './assets/placeholder.svg', alt: 'Die Überraschung ist noch nicht veröffentlicht.', text: '', released: false,
-    }),
-  };
-}
 
 export function localImagePath(image) {
   const path = image.replace(/^\.\//, '');

@@ -1,6 +1,6 @@
 # Datenschutz: Umsetzung und offene Angaben
 
-Stand: 13. November 2026. Interne Arbeitsunterlage für den Kalender. Die nachfolgend beschriebene Umsetzung ist lokal vorbereitet. Sie ist keine Zusicherung umfassender Rechtskonformität und ersetzt keine Prüfung des konkreten Betriebs. Die Website wurde damit noch nicht veröffentlicht.
+Stand: 19. November 2026. Interne Arbeitsunterlage für den Kalender. Kalenderseite und Discord-Anmeldung sind auf Cloudflare Workers veröffentlicht; eine private D1-Datenbank speichert die Kalender- und Kontodaten. Die technische Umsetzung ist keine Zusicherung umfassender Rechtskonformität und ersetzt keine Prüfung des konkreten Betriebs.
 
 ## Ausdrückliche Nutzerentscheidungen
 
@@ -11,6 +11,19 @@ Stand: 13. November 2026. Interne Arbeitsunterlage für den Kalender. Die nachfo
 - Zweck der gespeicherten Kalenderdaten: geräteübergreifend geöffnete Türchen, eigener Lösungsstand und Satzteile sowie zehn Fehlversuche pro Türchen mit anschließender 15-Minuten-Pause. Für Öffnungen werden nur Konto-Zuordnung, Kalenderjahr und Türchennummer gespeichert, keine Besuchszeitpunkte. Kein Tracking, kein Teilnehmerverzeichnis und keine Weiterverwendung für Werbung.
 
 ## Technisch vorhanden
+
+Produktiv verwendet der Kalender Cloudflare Workers und D1 mit Jurisdiction `eu`.
+Diese Einstellung begrenzt Betrieb und Speicherung der Datenbank auf die EU;
+sie ist keine Zusicherung für die regionale Verarbeitung aller HTTP-Anfragen.
+Die Datenbank hat keinen öffentlichen Lesezugriff. Server-Secrets werden als
+Cloudflare-Secrets hinterlegt; eigene Worker-Observability ist deaktiviert.
+Die Node-/SQLite-Variante bleibt als lokale Alternative erhalten.
+
+Die minütliche Cloudflare-Routine und Zugriffe nach Fristablauf löschen aktive
+Kontodaten ab dem vereinbarten Stichtag. D1-Wiederherstellungskopien (Time Travel)
+sind providerseitig automatisch aktiv und werden durch SQL-Löschungen nicht
+sofort beseitigt. Dieser Punkt bleibt im Löschkonzept gesondert zu berücksichtigen;
+eine Wiederherstellung darf keine gelöschten Teilnehmerdaten reaktivieren.
 
 Die private SQLite-Datei und ihre Begleitdateien werden nicht über die Website ausgeliefert. Produktionsbetrieb verlangt HTTPS. API-Zugriffe werden aus dem Sitzungscookie einem Konto zugeordnet. Die Kenntnis einer Discord-ID allein ermöglicht keinen Zugriff. Kontodaten können ausschließlich für das angemeldete Konto heruntergeladen oder nach Bestätigung gelöscht werden. Kontolöschung widerruft alle seine Sitzungen. Änderungen am Browserzähler oder an einer übergebenen ID beeinflussen keine fremden Konten.
 
@@ -27,7 +40,7 @@ Mit Anmeldung werden geöffnete Türchen im Konto gespeichert und in allen Brows
 | Verantwortlicher und Kontakt | Vollständige verantwortliche Person/Stelle, geeignete Kontaktdaten und erreichbarer Datenschutzkontakt. Der Alias M4sterCree ist dafür noch keine vollständige Betreiberangabe. |
 | Zwecke und Rechtsgrundlage | Rechtsgrundlage für Konto, Fortschritt, Missbrauchsschutz und lokale Speicherung anhand der tatsächlichen Teilnahmebedingungen prüfen und dokumentieren. Discord-Autorisierung ist keine pauschale Einwilligung in alle Kalenderverarbeitungen. |
 | Vollständige Informationen | Betreiber, Zwecke, Rechtsgrundlage, Empfänger, Speicherdauer, Rechte, Beschwerdemöglichkeit und gegebenenfalls Drittlandübermittlungen ergänzen. Der derzeitige Infodialog beschreibt technische Abläufe und ist noch keine vollständige, individuell geprüfte Datenschutzerklärung. |
-| Hosting | Konkreten Anbieter und Speicherort auswählen. Erforderliche Vereinbarung zur Auftragsverarbeitung, Zugriffsrechte, Transport-/Datenträgerschutz und Aktualisierungskonzept prüfen. |
+| Hosting | Cloudflare Workers und D1, Datenbank mit EU-Jurisdiction. Vereinbarung zur Auftragsverarbeitung, Zugriffsrechte, übrige Anbieterprozesse und Aktualisierungskonzept prüfen. |
 | Discord | Anbieterrolle, einschlägige Bedingungen und mögliche Drittlandübermittlungen der tatsächlichen Einbindung prüfen. Maßgeblich ist auch [Discords Datenschutzerklärung](https://discord.com/privacy). |
 | Protokolle und Backups | Keine Anfragekörper, Lösungseingaben, Sitzungscookies oder OAuth-Codes protokollieren. Einstellungen des Hosters prüfen. Gesicherte Kopien, Snapshots und gegebenenfalls Protokolle in Lösch- und Wiederherstellungsverfahren einbeziehen. |
 | Daten nach dem Stichtag | Sicherstellen, dass die Löschung trotz Wartung/Ausfall läuft und alte Backups keine gelöschten Konten wiederherstellen. Neue Kalenderjahre benötigen eine neu abgestimmte Frist. |

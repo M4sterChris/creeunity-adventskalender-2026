@@ -11,7 +11,16 @@
     "test:live": "node tools/check-public-release.mjs",
     "prepare:private": "node tools/prepare-private-repository.mjs",
     "preview:private": "node tools/serve.mjs --private",
-    "build:pages": "node tools/build-pages.mjs"
+    "build:pages": "node tools/build-pages.mjs",
+    "build:cloudflare": "node tools/prepare-cloudflare.mjs",
+    "cloudflare:login": "wrangler login",
+    "cloudflare:dev": "wrangler dev --config .cloudflare-build/wrangler.json --ip 127.0.0.1 --port 8787",
+    "cloudflare:deploy": "node tools/deploy-cloudflare.mjs"
   },
-  "engines": { "node": ">=22.13" }
+  "engines": {
+    "node": ">=22.13"
+  },
+  "devDependencies": {
+    "wrangler": "^4.165.0"
+  }
 }

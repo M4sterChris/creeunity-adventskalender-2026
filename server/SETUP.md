@@ -1,5 +1,9 @@
 # Serverprüfung und Discord-Anmeldung
 
+Für den kostenlosen Onlinebetrieb gibt es zusätzlich die
+[Cloudflare-Anleitung](cloudflare/SETUP.md). Die nachfolgende Anleitung beschreibt
+die weiterhin unterstützte Node-/SQLite-Variante.
+
 Die neue Prüfung erlaubt pro Discord-Konto, Kalenderjahr und Türchen zehn Fehlversuche. Der zehnte Fehlversuch startet eine Pause von genau 15 Minuten. Weitere Eingaben verlängern diese Pause nicht. Danach stehen wieder zehn Versuche bereit. Andere Türchen bleiben zugänglich. Ungültige Eingabeformate, fehlende Anmeldung und Serverfehler verbrauchen keine Versuche.
 
 Der Server speichert die Grenzen und gelösten Rätsel in SQLite. Reload, Logout, das Zurücksetzen lokaler Öffnungen und ein anderes Gerät setzen die Grenzen nicht zurück. Gleichzeitige Anfragen werden in einer Datenbanktransaktion gezählt. Ein neues Discord-Konto hat einen eigenen Zähler. Weitergegebene Lösungen lassen sich damit nicht verhindern.

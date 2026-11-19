@@ -91,7 +91,18 @@ export function validateConfig(input) {
 }
 
 // Der DOM-Teil wird beim Import durch Node-Tests nicht ausgeführt.
-if (typeof document !== 'undefined') initialize();
+/** Preserve old bookmarks now that Discord and the API share the hosted origin. */
+export function hostedCalendarLocation(value) {
+  const url = new URL(value);
+  if (url.hostname !== 'm4sterchris.github.io' || !/^\/creeunity-adventskalender-2026\/?$/.test(url.pathname)) return null;
+  return `https://creeunity-adventskalender-2026.creeunity-m4sterchris.workers.dev/${url.search}${url.hash}`;
+}
+
+if (typeof document !== 'undefined') {
+  const hosted = hostedCalendarLocation(location.href);
+  if (hosted) location.replace(hosted);
+  else initialize();
+}
 
 function initialize() {
   const $ = id => document.getElementById(id);

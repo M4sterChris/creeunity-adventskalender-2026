@@ -2,10 +2,8 @@ import { DatabaseSync } from 'node:sqlite';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { normalizePuzzleAnswer, puzzleIdentity } from '../puzzles.js';
 
-export const MAX_ATTEMPTS = 10;
-export const LOCK_MS = 15 * 60 * 1000;
-export const SESSION_MS = 14 * 24 * 60 * 60 * 1000;
-export const PARTICIPANT_DELETE_AT = Date.parse('2027-02-01T00:00:00+01:00');
+import { MAX_ATTEMPTS, LOCK_MS, SESSION_MS, PARTICIPANT_DELETE_AT } from './policy.mjs';
+export { MAX_ATTEMPTS, LOCK_MS, SESSION_MS, PARTICIPANT_DELETE_AT } from './policy.mjs';
 export const digest = value => createHash('sha256').update(value).digest('hex');
 export const newToken = () => randomBytes(32).toString('base64url');
 
