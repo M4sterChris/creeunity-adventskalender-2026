@@ -116,6 +116,7 @@ if (typeof document !== 'undefined') {
 function initialize() {
   const $ = id => document.getElementById(id);
   const adminAccess = new URLSearchParams(location.search).get('admin') === 'true';
+  $('admin-modal').inert = !adminAccess;
   // Designvorschau lädt ausschließlich öffentliche Inhalte und benötigt keinen Zugangsschlüssel.
   const puzzleDemo = new URLSearchParams(location.search).get('preview') === 'puzzle';
   const designPreview = puzzleDemo || new URLSearchParams(location.search).get('preview') === 'design';
