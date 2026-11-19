@@ -8,7 +8,7 @@ on:
     - cron: '13 0 * 12 *'
   push:
     branches: [main]
-    paths: ['doors-data.json', 'images/**', '.github/workflows/publish-calendar.yml']
+    paths: ['doors-data.json', 'images/**', 'audio/**', '.github/workflows/publish-calendar.yml']
   workflow_dispatch:
 
 permissions:

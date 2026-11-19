@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, writeFile, mkdir, mkdtemp, readdir, rm } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { selectReleasedContents, publishDoors, localImagePath } from '../tools/publish-doors.mjs';
 
 const example = JSON.parse(await readFile(new URL('../examples/doors-data.example.json', import.meta.url), 'utf8'));
@@ -47,6 +49,21 @@ test('Verspätete Actions holen alle bisherigen Tage nach', () => {
 test('Private Metadaten werden auch über zusätzliche JSON-Felder nicht kopiert', () => {
   const data = privateData(); data.adminToken = 'SECRET-TOKEN'; data.doors[0].note = 'SECRET-NOTE';
   assert.doesNotMatch(JSON.stringify(selectReleasedContents(data, new Date('2026-12-02T12:00:00Z'))), /SECRET/);
+});
+
+test('Pages-Build nimmt den API-Client auf, aber keine Serverdateien, Datenbank oder privaten Inhalte', async t => {
+  const { target } = await fixture(t);
+  const publicFiles = ['index.html','styles.css','script.js','theme.js','github-editor.js','text-format.js','puzzles.js','puzzle-client.js','media.js','doors-data.json','.nojekyll'];
+  for (const name of publicFiles) await writeFile(resolve(target, name), 'öffentliche Testdatei');
+  await mkdir(resolve(target, 'assets'));
+  await writeFile(resolve(target, 'assets/test.svg'), '<svg/>');
+  for (const directory of ['server', '.calendar-data', '.private-repository', 'output']) {
+    await mkdir(resolve(target, directory));
+    await writeFile(resolve(target, directory, 'privat.txt'), 'Darf nicht ins Artefakt');
+  }
+  await promisify(execFile)(process.execPath, [resolve('tools/build-pages.mjs')], { cwd: target });
+  const files = await readdir(resolve(target, '_site'));
+  assert.deepEqual(files.sort(), [...publicFiles, 'assets'].sort());
 });
 test('Lokale Bildpfade dürfen den privaten Bilderordner nicht verlassen', () => {
   for (const path of ['../secret.png', './images/../secret.png', '/images/test.png', 'C:/secret.png', './images/a\\b.png', './images/a.html']) assert.throws(() => localImagePath(path));
@@ -127,6 +144,22 @@ test('Nach dem Jahreswechsel im neuen Kalenderjahr bleibt alles gesperrt', () =>
   const data = privateData(); data.year = 2027;
   const result = selectReleasedContents(data, new Date('2027-01-01T00:00:00Z'));
   assert.equal(result.doors.filter(door => door.released).length, 0);
+});
+test('Audio wird mit dem Tagesinhalt freigegeben und vor dem Termin weder genannt noch kopiert',async t=>{
+  const {source,target}=await fixture(t);
+  const data=privateData();data.doors[0].audio='./audio/erstes.mp3';data.doors[1].audio='./audio/geheimes-zweites.mp3';
+  await mkdir(resolve(source,'audio'));
+  await writeFile(resolve(source,'audio/erstes.mp3'),'ID3-AUDIO-TAG1');
+  await writeFile(resolve(source,'images/geheim-1.svg'),'<svg/>');
+  await writeFile(resolve(source,'doors-data.json'),JSON.stringify(data));
+  // Die zukünftige Audiodatei existiert absichtlich nicht.
+  await publishDoors({source,target,now:new Date('2026-12-01T12:00:00Z')});
+  const manifest=JSON.parse(await readFile(resolve(target,'doors-data.json'),'utf8'));
+  assert.match(manifest.doors[0].audio,/day-01-audio-[a-f0-9]+\.mp3$/);
+  assert.equal(await readFile(resolve(target,manifest.doors[0].audio),'utf8'),'ID3-AUDIO-TAG1');
+  assert.equal(manifest.doors[1].audio,undefined);
+  assert.doesNotMatch(JSON.stringify(manifest),/geheimes-zweites/);
+  assert.equal((await readdir(resolve(target,'assets/released/2026'))).length,2);
 });
 test('Öffentliche Produktionsdatei enthält explizite Veröffentlichungsangaben', async () => {
   const data = JSON.parse(await readFile(new URL('../doors-data.json', import.meta.url), 'utf8'));

@@ -5,6 +5,8 @@
 import { GitHubEditor, detectImage, privateImagePath } from './github-editor.js';
 import { renderFormattedText, formatSelection } from './text-format.js';
 import { validatePuzzle, puzzleIdentity, checkPuzzleAnswer } from './puzzles.js';
+import { CalendarAPI, attemptMessage } from './puzzle-client.js';
+import { safeAudioUrl, audioMime, privateAudioPath, detectAudio, MAX_AUDIO_SIZE } from './media.js';
 
 const BERLIN = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit',
@@ -66,10 +68,12 @@ export function validateConfig(input) {
     if (!safeUrl(door.image, { image: true })) throw new Error(`Türchen ${door.day}: Bitte einen relativen Bildpfad oder eine HTTPS-Bild-URL eingeben.`);
     if (typeof door.text !== 'string' || door.text.length > 10000) throw new Error(`Türchen ${door.day}: Der Text darf maximal 10.000 Zeichen enthalten.`);
     if (door.alt != null && (typeof door.alt !== 'string' || door.alt.length > 500)) throw new Error(`Türchen ${door.day}: Die Bildbeschreibung darf maximal 500 Zeichen enthalten.`);
+    if (door.audio != null && door.audio !== '' && !safeAudioUrl(door.audio)) throw new Error(`Türchen ${door.day}: Bitte einen Audio-Pfad oder eine HTTPS-Audio-URL für MP3, WAV, M4A oder Ogg eingeben.`);
     if (input.releaseMode === 'daily' && typeof door.released !== 'boolean') throw new Error(`Türchen ${door.day}: Die Veröffentlichungsangabe fehlt.`);
     let puzzle;
     try { puzzle = validatePuzzle(door.puzzle); } catch (error) { throw new Error(`Türchen ${door.day}: ${error.message}`); }
     return { day: door.day, title: door.title.trim(), image: door.image.trim(), alt: door.alt || '', text: door.text,
+      ...(door.audio ? { audio: door.audio.trim() } : {}),
       ...(puzzle ? { puzzle } : {}),
       ...(input.releaseMode === 'daily' ? { released: door.released } : {}) };
   }).sort((a, b) => a.day - b.day);
@@ -107,12 +111,150 @@ function initialize() {
   const pendingImages = new Map();
   const privatePreviews = new Map();
   const privateImageLoads = new Map();
+  const pendingAudio = new Map();
+  const privateAudioPreviews = new Map();
+  const privateAudioLoads = new Map();
+  let audioRequest = 0;
+  let editorAudioRequest = 0;
+  const participantAPI = new CalendarAPI();
+  let participant = { loading: true, available: false, authEnabled: false, user: null, error: '' };
+  let serverStatuses = {};
+  let serverClock = { time: Date.now(), received: performance.now() };
+  let participantRequest = 0;
+  let puzzleBusy = false;
+  let deleteAccountArmed = false;
+  let openedQueue = Promise.resolve();
+  let openedWrites = 0;
+  let openedEpoch = 0;
+  let accountEpoch = 0;
+  const serverNow = () => serverClock.time + performance.now() - serverClock.received;
+  function syncServerClock(value) {
+    if (Number.isFinite(value)) serverClock = { time: value, received: performance.now() };
+  }
+  function renderParticipant() {
+    $('participant-access').hidden = state.preview;
+    $('participant-login').hidden = participant.loading || !participant.available || !participant.authEnabled || !!participant.user;
+    $('participant-logout').hidden = !participant.user;
+    $('participant-retry').hidden = !participant.error;
+    $('participant-data-controls').hidden = !participant.user || state.preview;
+    $('participant-status').textContent = participant.loading ? 'Discord-Anmeldung wird geladen …'
+      : participant.closed ? 'Die Teilnahme ist beendet. Die gespeicherten Teilnehmerdaten wurden gelöscht.'
+      : participant.error || (participant.user ? 'Mit Discord angemeldet.'
+      : participant.authEnabled ? 'Melde dich mit Discord an, um Lösungen zu prüfen und deine Sammlung zu speichern.'
+      : 'Die Discord-Anmeldung wird noch eingerichtet.');
+  }
+  async function refreshParticipant() {
+    if (!state.config || state.preview || puzzleBusy || openedWrites) return;
+    const request = ++participantRequest;
+    const openedAtRequest = openedEpoch;
+    const previouslySignedIn = !!participant.user;
+    const previouslySolved = !!state.solved[state.activeDay];
+    try {
+      const session = await participantAPI.session();
+      const progress = session.user ? await participantAPI.statuses() : null;
+      if (request !== participantRequest || state.preview) return;
+      participant = { ...session, loading: false, available: true, error: '' };
+      syncServerClock(progress?.serverNow ?? session.serverNow);
+      serverStatuses = {};
+      state.solved = {};
+      if (openedAtRequest === openedEpoch && !openedWrites) {
+        if (session.user) state.opened = new Set(progress?.year === state.config.year ? progress.opened || [] : []);
+        else readGuestOpened();
+      }
+      if (progress?.year === state.config.year) {
+        for (const status of progress.puzzles) {
+          serverStatuses[status.day] = status;
+          const door = state.config.doors.find(item => item.day === status.day);
+          if (status.solved && door?.puzzle) state.solved[status.day] = { identity: puzzleIdentity(door.puzzle), fragment: status.fragment || '' };
+        }
+      }
+    } catch {
+      if (request !== participantRequest) return;
+      participant = { loading: false, available: false, authEnabled: false, user: null, error: 'Die Anmeldung und Lösungsprüfung sind gerade nicht verfügbar. Bitte versuche es später noch einmal.' };
+      serverStatuses = {}; state.solved = {};
+      readGuestOpened();
+    }
+    renderParticipant(); renderCalendar();
+    if ($('door-modal').open) {
+      if (previouslySignedIn !== !!participant.user || previouslySolved !== !!state.solved[state.activeDay]) renderActivePuzzle();
+      else renderAttemptState();
+    }
+  }
+  $('participant-retry').addEventListener('click', refreshParticipant);
+  function persistOpened(year, day) {
+    const account = accountEpoch;
+    let failed = false;
+    ++openedEpoch; ++openedWrites;
+    openedQueue = openedQueue.then(async () => {
+      if (account !== accountEpoch || !participant.user) return;
+      const progress = await participantAPI.openDoor(year, day);
+      if (account === accountEpoch && openedWrites === 1 && progress.year === state.config.year) {
+        state.opened = new Set(progress.opened);
+        renderCalendar();
+      }
+    }).catch(() => {
+      failed = true;
+      if (account === accountEpoch) toast('Dieses Türchen konnte gerade nicht im Konto gespeichert werden. Bitte öffne es später erneut.');
+    }).finally(() => {
+      --openedWrites;
+      if (failed && !openedWrites && account === accountEpoch) refreshParticipant();
+    });
+  }
+  $('participant-logout').addEventListener('click', async () => {
+    ++participantRequest;
+    ++accountEpoch; ++openedEpoch;
+    $('participant-logout').disabled = true;
+    try {
+      await participantAPI.logout();
+      state.solved = {}; serverStatuses = {};
+      participant.user = null;
+      readGuestOpened();
+      renderParticipant(); renderCalendar(); renderActivePuzzle();
+      toast('Abgemeldet. Deine Sammlung und laufende Rätselpausen bleiben in deinem Konto erhalten.');
+    } catch { toast('Abmelden ist gerade nicht möglich. Bitte versuche es erneut.'); }
+    finally { $('participant-logout').disabled = false; }
+  });
+  $('export-account').addEventListener('click', async () => {
+    $('export-account').disabled = true;
+    try {
+      const data = await participantAPI.exportAccount();
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+      const link = document.createElement('a'); link.href = url; link.download = 'creeunity-meine-daten.json';
+      document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      $('account-feedback').textContent = 'Deine gespeicherten Kalenderdaten wurden als Datei bereitgestellt.';
+    } catch { $('account-feedback').textContent = 'Die Auskunft ist gerade nicht verfügbar. Bitte versuche es erneut.'; }
+    finally { $('export-account').disabled = false; }
+  });
+  $('delete-account').addEventListener('click', async () => {
+    if (!deleteAccountArmed) {
+      deleteAccountArmed = true;
+      $('delete-account').textContent = 'Ja, meine Kalenderdaten endgültig löschen';
+      $('account-feedback').textContent = 'Damit werden dein gesamter Kontofortschritt einschließlich geöffneter Türchen und alle deine Sitzungen gelöscht. Lokale Gastöffnungen in diesem Browser werden ebenfalls zurückgesetzt. Klicke zur Bestätigung noch einmal.';
+      return;
+    }
+    $('delete-account').disabled = true;
+    ++participantRequest;
+    ++accountEpoch; ++openedEpoch;
+    try {
+      await participantAPI.deleteAccount();
+      participant.user = null; state.solved = {}; serverStatuses = {}; state.opened.clear();
+      writeStorage(progressKey(), null); writeStorage(solvedKey(), null);
+      renderParticipant(); renderCalendar(); renderActivePuzzle();
+      $('account-feedback').textContent = 'Deine Kalenderdaten und alle Anmeldesitzungen wurden gelöscht.';
+    } catch { $('account-feedback').textContent = 'Die Löschung ist gerade nicht verfügbar. Bitte versuche es erneut.'; }
+    finally { deleteAccountArmed = false; $('delete-account').disabled = false; $('delete-account').textContent = 'Meine Kalenderdaten löschen'; }
+  });
 
   function clearPrivateImages() {
+    resetDoorAudio();
+    resetEditorAudio();
     privateImageGeneration++;
     for (const item of pendingImages.values()) URL.revokeObjectURL(item.url);
     for (const url of privatePreviews.values()) URL.revokeObjectURL(url);
     pendingImages.clear(); privatePreviews.clear(); privateImageLoads.clear();
+    for (const item of pendingAudio.values()) URL.revokeObjectURL(item.url);
+    for (const url of privateAudioPreviews.values()) URL.revokeObjectURL(url);
+    pendingAudio.clear(); privateAudioPreviews.clear(); privateAudioLoads.clear();
     lastRender = '';
   }
   function githubStatus(message) { $('github-status').textContent = message; }
@@ -180,6 +322,66 @@ function initialize() {
     } catch { /* Die Türchen-Vorschau zeigt bei Bedarf den ausführlichen Bildhinweis. */ }
   }
 
+  async function resolveDoorAudio(door) {
+    if (!door.audio) return '';
+    const pending = pendingAudio.get(door.day);
+    if (pending?.path === door.audio) return pending.url;
+    if (!repository || !/^(\.\/)?audio\//.test(door.audio)) return safeAudioUrl(door.audio);
+    const path = privateAudioPath(door.audio);
+    if (privateAudioPreviews.has(path)) return privateAudioPreviews.get(path);
+    if (privateAudioLoads.has(path)) return privateAudioLoads.get(path);
+    const activeRepository = repository, generation = privateImageGeneration;
+    const loading = (async () => {
+      const blob = await activeRepository.audio(path);
+      if (repository !== activeRepository || generation !== privateImageGeneration) throw new Error('Die Audiovorschau wurde beendet.');
+      const url = URL.createObjectURL(new Blob([blob], { type: audioMime(path) }));
+      privateAudioPreviews.set(path, url);
+      return url;
+    })();
+    privateAudioLoads.set(path, loading);
+    try { return await loading; }
+    finally { if (privateAudioLoads.get(path) === loading) privateAudioLoads.delete(path); }
+  }
+  function resetPlayer(player) { player.pause(); player.removeAttribute('src'); player.load(); }
+  function resetDoorAudio() {
+    ++audioRequest;
+    resetPlayer($('door-audio'));
+    $('door-audio-section').hidden = true;
+    $('audio-error').hidden = true;
+    $('audio-download').removeAttribute('href');
+  }
+  function resetEditorAudio() { ++editorAudioRequest; resetPlayer($('admin-audio-preview')); $('admin-audio-preview').hidden = true; }
+  async function renderDoorAudio(door) {
+    resetDoorAudio();
+    if (!door.audio) return;
+    const request = audioRequest;
+    $('door-audio-section').hidden = false;
+    try {
+      const url = await resolveDoorAudio(door);
+      if (request !== audioRequest || !$('door-modal').open) return;
+      $('door-audio').src = url;
+      $('audio-download').href = url;
+    } catch { if (request === audioRequest) $('audio-error').hidden = false; }
+  }
+  async function updateEditorAudio() {
+    resetEditorAudio();
+    const request = editorAudioRequest;
+    if (!state.editor) return;
+    const day = state.selectedDay, audio = $('admin-door-audio').value.trim();
+    if (!audio) return;
+    try {
+      const url = await resolveDoorAudio({ day, audio });
+      if (request !== editorAudioRequest || state.selectedDay !== day || $('admin-door-audio').value.trim() !== audio || !url) return;
+      $('admin-audio-preview').src = url;
+      $('admin-audio-preview').hidden = false;
+    } catch { /* Der Türchenplayer zeigt bei Bedarf den Ladehinweis. */ }
+  }
+  $('door-audio').addEventListener('error', () => { if ($('door-audio').hasAttribute('src')) $('audio-error').hidden = false; });
+  $('door-modal').addEventListener('close', resetDoorAudio);
+  $('admin-modal').addEventListener('close', resetEditorAudio);
+  $('door-audio').addEventListener('play', () => $('admin-audio-preview').pause());
+  $('admin-audio-preview').addEventListener('play', () => $('door-audio').pause());
+
   // Speicher ist optional: Privatmodus/volle Quota dürfen den Kalender nicht lahmlegen.
   function readStorage(key, session = false) {
     try { return (session ? sessionStorage : localStorage).getItem(key); }
@@ -238,15 +440,17 @@ function initialize() {
     } catch { state.storageOK = false; }
   }
 
-  function readProgress() {
+  function readGuestOpened() {
     try {
       const saved = JSON.parse(readStorage(progressKey()) || '[]');
       state.opened = new Set(Array.isArray(saved) ? saved.filter(n => Number.isInteger(n) && n >= 1 && n <= 24) : []);
     } catch { state.opened = new Set(); }
-    try {
-      const saved = JSON.parse(readStorage(solvedKey()) || '{}');
-      state.solved = savedSolutions(saved);
-    } catch { state.solved = {}; }
+  }
+  function readProgress() {
+    readGuestOpened();
+    // Solved production puzzles are restored exclusively from the server.
+    // Local editing/resetting cannot grant rewards or reset a lockout.
+    state.solved = {};
   }
 
   async function loadConfiguration() {
@@ -275,6 +479,8 @@ function initialize() {
       }
       if (state.preview) { restorePreviewProgress(); savePreviewProgress(); }
       readProgress();
+      if (!state.preview) await refreshParticipant();
+      renderParticipant();
       updateLinks();
       renderCalendar();
       $('load-error').hidden = true;
@@ -401,6 +607,8 @@ function initialize() {
     $('puzzle-answer').removeAttribute('aria-invalid');
     $('puzzle-feedback').textContent = '';
     $('puzzle-feedback').className = 'puzzle-feedback';
+    $('puzzle-login').hidden = true;
+    $('puzzle-attempts').textContent = '';
     if (!available || !door.puzzle) return;
     const number = door.puzzle.type === 'number';
     $('puzzle-answer-label').textContent = number ? 'Deine Zahl' : 'Deine Buchstabenfolge';
@@ -409,9 +617,34 @@ function initialize() {
     const done = solvedPuzzles().some(item => item.day === door.day);
     $('puzzle-form').hidden = done;
     if (done) {
-      $('puzzle-feedback').textContent = number ? `✓ Richtig! Die heutige Buchstabenfolge ist ${door.puzzle.fragment}` : '✓ Richtig!';
+      const record = (state.preview ? state.previewSolved : state.solved)[door.day];
+      $('puzzle-feedback').textContent = number ? `✓ Richtig! Die heutige Buchstabenfolge ist ${record.fragment}` : '✓ Richtig!';
       $('puzzle-feedback').classList.add('is-correct');
     }
+    renderAttemptState();
+  }
+
+  function renderAttemptState() {
+    const door = state.config?.doors.find(item => item.day === state.activeDay);
+    if (!door?.puzzle || $('door-puzzle').hidden) return;
+    const done = solvedPuzzles().some(item => item.day === door.day);
+    if (state.preview) {
+      $('puzzle-check').disabled = puzzleBusy || !!door.puzzle.serverOnly;
+      $('puzzle-answer').disabled = !!door.puzzle.serverOnly;
+      $('puzzle-attempts').textContent = done ? '' : door.puzzle.serverOnly ? 'Lade zum Testen dieses Rätsels den privaten Kalender im Editor.' : 'Vorschau: Testeingaben verändern keine echten Versuche.';
+      return;
+    }
+    const ready = participant.available && !participant.loading && !!participant.user;
+    const status = serverStatuses[door.day];
+    const locked = (status?.lockedUntil || 0) > serverNow();
+    $('puzzle-form').hidden = done || !ready;
+    $('puzzle-login').hidden = done || ready;
+    $('puzzle-login-link').hidden = !participant.available || !participant.authEnabled || participant.loading;
+    $('puzzle-login-note').textContent = participant.loading ? 'Anmeldung wird geladen …' : participant.closed ? 'Die Teilnahme ist beendet. Die Teilnehmerdaten wurden gelöscht.' : participant.error
+      || (participant.authEnabled ? 'Zum Prüfen deiner Lösung bitte mit Discord anmelden.' : 'Die Discord-Anmeldung wird noch eingerichtet.');
+    $('puzzle-check').disabled = !ready || puzzleBusy || locked || !status;
+    $('puzzle-answer').disabled = !ready || locked || !status;
+    $('puzzle-attempts').textContent = done || !ready ? '' : attemptMessage(status, serverNow());
   }
 
   $('puzzle-form').addEventListener('submit', async event => {
@@ -423,23 +656,32 @@ function initialize() {
     const year = state.config.year;
     const preview = state.preview;
     const identity = puzzleIdentity(door.puzzle);
+    ++participantRequest; // Invalidate any in-flight background status request.
+    const answerRequest = participantRequest;
+    puzzleBusy = true;
     $('puzzle-check').disabled = true;
     try {
-      const result = await checkPuzzleAnswer(door.puzzle, $('puzzle-answer').value, year, day);
-      if (state.activeDay !== day || state.config.year !== year || state.preview !== preview || puzzleIdentity(state.config.doors.find(item => item.day === day)?.puzzle) !== identity) return;
+      const result = preview ? await checkPuzzleAnswer(door.puzzle, $('puzzle-answer').value, year, day)
+        : await participantAPI.answer(year, day, $('puzzle-answer').value);
+      if (participantRequest !== answerRequest || state.config.year !== year || state.preview !== preview || puzzleIdentity(state.config.doors.find(item => item.day === day)?.puzzle) !== identity) return;
+      if (!preview) { serverStatuses[day] = result; syncServerClock(result.serverNow); }
       if (!result.correct) {
-        $('puzzle-feedback').textContent = 'Noch nicht ganz – versuch es noch einmal.';
-        $('puzzle-answer').setAttribute('aria-invalid', 'true');
+        if (state.activeDay === day) {
+          $('puzzle-feedback').textContent = result.lockedUntil ? '10 Fehlversuche erreicht. Bitte warte, bis die Rätselpause vorbei ist.' : 'Noch nicht ganz – versuch es noch einmal.';
+          $('puzzle-answer').setAttribute('aria-invalid', 'true');
+        }
         return;
       }
       const records = preview ? state.previewSolved : state.solved;
       records[day] = { identity, fragment: result.fragment };
-      const stored = preview ? savePreviewProgress() : writeStorage(solvedKey(), JSON.stringify(state.solved));
-      renderCalendar(); renderActivePuzzle();
-      if (!stored) $('puzzle-feedback').textContent += ' Für diesen Besuch gemerkt; dein Browser blockiert die Speicherung.';
-    } catch {
-      $('puzzle-feedback').textContent = 'Die Prüfung ist gerade nicht verfügbar. Bitte lade die Seite über HTTPS neu.';
-    } finally { $('puzzle-check').disabled = false; }
+      const stored = preview ? savePreviewProgress() : true;
+      renderCalendar();
+      if (state.activeDay === day) renderActivePuzzle();
+      if (!stored && state.activeDay === day) $('puzzle-feedback').textContent += ' Für diesen Besuch gemerkt; dein Browser blockiert die Speicherung.';
+    } catch (error) {
+      if (participantRequest === answerRequest && state.activeDay === day) $('puzzle-feedback').textContent = error.status ? error.message : 'Die Prüfung ist gerade nicht verfügbar. Bitte lade deinen Versuchsstand neu, bevor du es erneut probierst.';
+      if (error.status === 401) { participant.user = null; state.solved = {}; serverStatuses = {}; renderParticipant(); renderCalendar(); }
+    } finally { puzzleBusy = false; renderAttemptState(); }
   });
   $('puzzle-answer').addEventListener('input', () => $('puzzle-answer').removeAttribute('aria-invalid'));
 
@@ -458,6 +700,7 @@ function initialize() {
       return;
     }
     const request = ++doorRequest;
+    resetDoorAudio();
     let image = '';
     try { image = await resolveDoorImage(door); }
     catch (error) { feedback(error.message); }
@@ -479,7 +722,8 @@ function initialize() {
       stored = savePreviewProgress();
     } else {
       state.opened.add(day);
-      stored = writeStorage(progressKey(), JSON.stringify([...state.opened]));
+      if (participant.user && participant.available) persistOpened(state.config.year, day);
+      else stored = writeStorage(progressKey(), JSON.stringify([...state.opened]));
     }
     renderCalendar();
     // Raster-Buttons wurden ersetzt; Editor-Schaltflächen bleiben als Fokusziel erhalten.
@@ -492,6 +736,7 @@ function initialize() {
     };
     $('door-modal').showModal();
     $('door-modal').scrollTop = 0;
+    renderDoorAudio(door);
   }
 
   $('doors-grid').addEventListener('click', event => {
@@ -537,23 +782,40 @@ function initialize() {
     });
   });
   $('info-button').addEventListener('click', () => {
-    $('storage-note').textContent = state.storageOK ? 'Der Fortschritt wird nur in diesem Browser und pro Kalenderjahr gespeichert.' : 'Dein Browser hat den lokalen Speicher blockiert. Fortschritt wird nur für diesen Besuch behalten.';
+    $('storage-note').textContent = participant.user ? 'Geöffnete Türchen, Sammlung und Rätselpausen sind mit deinem Discord-Konto gespeichert. Zurücksetzen entfernt nur die geöffneten Türchen, auf allen Geräten.' : 'Ohne Anmeldung bleiben geöffnete Türchen nur in diesem Browser. Nach der Anmeldung wird der im Konto gespeicherte Stand verwendet.';
     $('info-modal').showModal();
   });
-  $('reset-progress').addEventListener('click', () => {
+  $('reset-progress').addEventListener('click', async () => {
     if (!state.config) return;
-    if (!resetArmed) { resetArmed = true; $('reset-progress').textContent = 'Wirklich zurücksetzen? Erneut klicken'; return; }
-    state.opened.clear();
-    state.solved = {};
-    const openedStored = writeStorage(progressKey(), null);
-    const solvedStored = writeStorage(solvedKey(), null);
-    const stored = openedStored && solvedStored;
-    renderCalendar();
-    resetArmed = false;
-    $('reset-progress').textContent = 'Meinen Fortschritt zurücksetzen';
-    $('storage-note').textContent = stored ? 'Dein Fortschritt für diesen Kalender wurde zurückgesetzt.' : 'Für diesen Besuch zurückgesetzt. Dein Browser blockiert Änderungen am lokalen Speicher.';
+    if (!resetArmed) {
+      resetArmed = true; $('reset-progress').textContent = 'Wirklich zurücksetzen? Erneut klicken';
+      $('storage-note').textContent = participant.user ? 'Das setzt die geöffneten Türchen in deinem Konto auf allen Geräten zurück. Gelöste Rätsel und Pausen bleiben erhalten.' : 'Das setzt die geöffneten Türchen in diesem Browser zurück.';
+      return;
+    }
+    const account = accountEpoch;
+    const signedIn = !!participant.user;
+    const year = state.config.year;
+    ++openedEpoch; ++openedWrites;
+    $('reset-progress').disabled = true;
+    try {
+      if (signedIn) {
+        await openedQueue;
+        if (account !== accountEpoch || !participant.user) throw new Error('Konto gewechselt.');
+        await participantAPI.resetOpened(year);
+        if (account !== accountEpoch || year !== state.config.year) return;
+      }
+      state.opened.clear();
+      const stored = signedIn || writeStorage(progressKey(), null);
+      renderCalendar();
+      $('storage-note').textContent = signedIn ? 'Geöffnete Türchen wurden im Konto auf allen Geräten zurückgesetzt. Deine Sammlung und Rätselpausen bleiben erhalten.'
+        : stored ? 'Geöffnete Türchen wurden in diesem Browser zurückgesetzt.' : 'Für diesen Besuch zurückgesetzt. Dein Browser blockiert Änderungen am lokalen Speicher.';
+    } catch { $('storage-note').textContent = 'Zurücksetzen ist gerade nicht möglich. Bitte versuche es erneut.'; }
+    finally {
+      --openedWrites; resetArmed = false; $('reset-progress').disabled = false;
+      $('reset-progress').textContent = 'Geöffnete Türchen zurücksetzen';
+    }
   });
-  $('info-modal').addEventListener('close', () => { resetArmed = false; $('reset-progress').textContent = 'Meinen Fortschritt zurücksetzen'; });
+  $('info-modal').addEventListener('close', () => { resetArmed = false; $('reset-progress').textContent = 'Geöffnete Türchen zurücksetzen'; deleteAccountArmed = false; $('delete-account').textContent = 'Meine Kalenderdaten löschen'; $('account-feedback').textContent = ''; });
 
   // ADMIN: Nur ?admin=true macht den Editor sichtbar. Kein Sicherheitsmechanismus.
   function populateAdmin() {
@@ -576,6 +838,7 @@ function initialize() {
     $('editing-label').textContent = `Du bearbeitest Türchen ${door.day} von 24`;
     $('admin-door-title').value = door.title;
     $('admin-door-image').value = door.image;
+    $('admin-door-audio').value = door.audio || '';
     $('admin-door-alt').value = door.alt;
     $('admin-door-text').value = door.text;
     $('admin-puzzle-type').value = door.puzzle?.type || '';
@@ -585,17 +848,22 @@ function initialize() {
     updateTextPreview();
     $('admin-door-picker').querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.day) === door.day)));
     updateEditorImage();
+    updateEditorAudio();
     savePreviewProgress();
   }
   function captureEditor() {
     const door = state.editor.doors.find(item => item.day === state.selectedDay);
     Object.assign(door, { title: $('admin-door-title').value, image: $('admin-door-image').value, alt: $('admin-door-alt').value, text: $('admin-door-text').value });
+    if ($('admin-door-audio').value.trim()) door.audio = $('admin-door-audio').value.trim();
+    else delete door.audio;
     const type = $('admin-puzzle-type').value;
     if (!type) delete door.puzzle;
     else {
       const answer = $('admin-puzzle-answer').value;
+      const previousServer = door.puzzle?.type === type && door.puzzle.serverOnly;
       const previousHash = door.puzzle?.type === type ? door.puzzle.answerHash : undefined;
-      door.puzzle = { type, ...(!answer && previousHash ? { answerHash: previousHash } : { answer }), ...(type === 'number' ? { fragment: $('admin-puzzle-fragment').value } : {}) };
+      door.puzzle = !answer && previousServer ? { type, serverOnly: true }
+        : { type, ...(!answer && previousHash ? { answerHash: previousHash } : { answer }), ...(type === 'number' ? { fragment: $('admin-puzzle-fragment').value } : {}) };
     }
     state.editor.year = Number($('admin-year').value);
     state.editor.links = { twitch: $('admin-twitch').value.trim(), discord: $('admin-discord').value.trim() };
@@ -627,8 +895,8 @@ function initialize() {
     $('admin-puzzle-fragment-label').hidden = type !== 'number';
     $('admin-puzzle-answer').inputMode = type === 'number' ? 'decimal' : 'text';
     const door = state.editor?.doors.find(item => item.day === state.selectedDay);
-    $('admin-puzzle-help').textContent = door?.puzzle?.answerHash
-      ? 'Die öffentliche Datei enthält nur einen Prüfwert. Verbinde den privaten Kalender, um die gespeicherte Lösung zu bearbeiten.'
+    $('admin-puzzle-help').textContent = door?.puzzle?.answerHash || door?.puzzle?.serverOnly
+      ? 'Die öffentliche Datei enthält keine bearbeitbare Lösung. Verbinde den privaten Kalender, um die gespeicherte Lösung zu bearbeiten.'
       : 'Zahl: richtige Eingabe gibt die Buchstabenfolge frei. Buchstabenfolge: richtige Eingabe bestätigt „Richtig!“. Groß-/Kleinschreibung und Leerzeichen in Buchstabenfolgen werden ignoriert.';
   }
   $('admin-puzzle-type').addEventListener('change', updatePuzzleEditor);
@@ -672,6 +940,8 @@ function initialize() {
     }
     if (adminAccess) writeStorage(PREVIEW_KEY, String(state.preview), true);
     $('preview-toggle').checked = state.preview;
+    renderParticipant();
+    if (!state.preview) refreshParticipant();
     renderCalendar();
   }
   $('preview-toggle').addEventListener('change', event => {
@@ -729,6 +999,36 @@ function initialize() {
   });
   $('admin-image-preview').addEventListener('error', () => { $('admin-image-preview').hidden = true; });
   $('admin-door-image').addEventListener('change', updateEditorImage);
+  $('admin-door-audio').addEventListener('change', updateEditorAudio);
+  $('admin-audio-remove').addEventListener('click', () => {
+    const previous = pendingAudio.get(state.selectedDay);
+    if (previous) URL.revokeObjectURL(previous.url);
+    pendingAudio.delete(state.selectedDay);
+    $('admin-door-audio').value = '';
+    captureEditor(); resetEditorAudio();
+    feedback('Audio entfernt. Mit Speichern wird die Änderung übernommen.');
+  });
+  $('admin-audio-upload').addEventListener('change', async event => {
+    const file = event.target.files[0];
+    if (!file || githubBusy || !state.editor) return;
+    setGitHubBusy(true);
+    const day = state.selectedDay;
+    try {
+      if (file.size > MAX_AUDIO_SIZE) throw new Error('Bitte eine Audiodatei bis maximal 25 MB wählen.');
+      captureEditor();
+      const bytes = new Uint8Array(await file.arrayBuffer()), type = detectAudio(bytes);
+      const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(n => n.toString(16).padStart(2, '0')).join('').slice(0, 16);
+      const path = `./audio/door-${String(day).padStart(2, '0')}-${digest}.${type.extension}`;
+      const previous = pendingAudio.get(day);
+      if (previous) URL.revokeObjectURL(previous.url);
+      const url = URL.createObjectURL(new Blob([bytes], { type: type.mime }));
+      pendingAudio.set(day, { path, bytes, url });
+      state.editor.doors.find(door => door.day === day).audio = path;
+      showEditorDoor();
+      feedback('Audio ausgewählt. Mit „Privat auf GitHub speichern“ wird es zusammen mit dem Türchen gesichert.');
+    } catch (error) { feedback(error.message); }
+    finally { event.target.value = ''; setGitHubBusy(false); }
+  });
   $('admin-image-upload').addEventListener('change', async event => {
     const file = event.target.files[0];
     if (!file || githubBusy || !state.editor) return;
@@ -804,13 +1104,19 @@ function initialize() {
     setGitHubBusy(true);
     try {
       const images = [...pendingImages.values()].filter(item => state.config.doors.some(door => door.image === item.path)).map(({ path, bytes }) => ({ path, bytes }));
-      feedback('Texte und Bilder werden privat gespeichert …');
-      await repository.save(state.config, images);
+      const audios = [...pendingAudio.values()].filter(item => state.config.doors.some(door => door.audio === item.path)).map(({ path, bytes }) => ({ path, bytes }));
+      feedback('Texte, Bilder und Audios werden privat gespeichert …');
+      await repository.save(state.config, images, audios);
       for (const item of pendingImages.values()) {
         if (state.config.doors.some(door => door.image === item.path)) privatePreviews.set(privateImagePath(item.path), item.url);
         else URL.revokeObjectURL(item.url);
       }
       pendingImages.clear();
+      for (const item of pendingAudio.values()) {
+        if (state.config.doors.some(door => door.audio === item.path)) privateAudioPreviews.set(privateAudioPath(item.path), item.url);
+        else URL.revokeObjectURL(item.url);
+      }
+      pendingAudio.clear();
       feedback('Auf GitHub gespeichert ✓ Künftige Türchen bleiben privat. Bereits fällige Inhalte werden nach der automatischen Veröffentlichung sichtbar.');
     } catch (error) { feedback(error.message); }
     finally { setGitHubBusy(false); }
@@ -864,10 +1170,15 @@ function initialize() {
     finally { refreshing = false; }
   }
   // Neuer Tag, Rückkehr aus Standby und Änderungen in einem anderen Tab.
-  setInterval(renderCalendar, 1000);
-  setInterval(() => { if (!document.hidden) refreshPublicConfiguration(); }, 60000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) { renderCalendar(); refreshPublicConfiguration(); } });
-  window.addEventListener('storage', event => { if (state.config && [progressKey(), solvedKey()].includes(event.key)) { readProgress(); renderCalendar(); if ($('door-modal').open) renderActivePuzzle(); } });
+  setInterval(() => { renderCalendar(); renderAttemptState(); }, 1000);
+  setInterval(() => { if (!document.hidden) { refreshPublicConfiguration(); refreshParticipant(); } }, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { renderCalendar(); refreshPublicConfiguration(); refreshParticipant(); } });
+  window.addEventListener('storage', event => { if (state.config && event.key === progressKey() && !participant.user) { readProgress(); renderCalendar(); if ($('door-modal').open) renderActivePuzzle(); } });
   window.addEventListener('pagehide', savePreviewProgress);
   loadConfiguration();
+  const loginResult = new URL(location.href).searchParams.get('login');
+  if (loginResult) {
+    toast(loginResult === 'success' ? 'Mit Discord angemeldet.' : loginResult === 'cancelled' ? 'Discord-Anmeldung abgebrochen.' : 'Die Discord-Anmeldung hat nicht geklappt. Bitte versuche es erneut.');
+    const cleanUrl = new URL(location.href); cleanUrl.searchParams.delete('login'); history.replaceState(null, '', cleanUrl);
+  }
 }

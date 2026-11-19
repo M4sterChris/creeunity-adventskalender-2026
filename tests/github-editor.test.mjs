@@ -83,6 +83,15 @@ test('Parallele Änderungen an der Konfiguration werden nicht überschrieben', a
   await assert.rejects(() => client.save(data), /jemand anderem/);
   assert.ok(!calls.some(c => c.options.method === 'PATCH' || c.url.endsWith('/git/blobs')));
 });
+test('Audio und Türchentexte werden gemeinsam privat gesichert',async()=>{
+  const {fetcher,calls}=mock();const client=new GitHubEditor('secret',fetcher);await client.load();
+  const bytes=new TextEncoder().encode('ID3-test-audio-data');
+  await client.save({...data,doors:[{day:7,audio:'./audio/funk.mp3'}]},[],[{path:'./audio/funk.mp3',bytes}]);
+  const tree=JSON.parse(calls.find(c=>c.url.endsWith('/git/trees')).options.body);
+  assert.deepEqual(tree.tree.map(e=>e.path),['audio/funk.mp3','doors-data.json']);
+  assert.equal(calls.filter(c=>c.url.endsWith('/git/commits')).length,1);
+  assert.deepEqual(JSON.parse(calls.find(c=>c.options.method==='PATCH').options.body),{sha:'HEAD2',force:false});
+});
 test('Branch-Konflikt wird angezeigt und nicht mit force umgangen', async () => {
   const { fetcher, calls } = mock({ '/git/refs/heads/main': () => json({}, 422) });
   const client = new GitHubEditor('secret', fetcher); await client.load();

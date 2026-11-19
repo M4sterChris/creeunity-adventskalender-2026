@@ -2,6 +2,10 @@
 
 Responsive HTML/CSS/Vanilla-JavaScript-App für M4sterCree und die CreeUnity, mit modernem Dark Mode als Standard, umschaltbarem Hellmodus und gemischten Türchen. Die Website läuft auf GitHub Pages. Noch nicht veröffentlichte Inhalte liegen getrennt in einem privaten GitHub-Repository.
 
+**Neue Serverprüfung, lokal vorbereitet:** Zehn Fehlversuche sperren ein Türchen für 15 Minuten. Die Sperre gilt pro Discord-Konto, Kalenderjahr und Türchen. Lösungen und Satzteile werden ausschließlich auf dem Server geprüft beziehungsweise freigegeben. GitHub Pages allein kann diese Funktion nicht ausführen. Für die Online-Aktivierung fehlen noch Serverhosting und die Einrichtung einer Discord-OAuth-Anwendung. [Einrichtung und Betrieb](server/SETUP.md). Die bisherige öffentliche Website wurde durch diese lokalen Änderungen nicht aktualisiert.
+
+Datensparsame Teilnehmeranmeldung: Von Discord wird nur die ID dauerhaft übernommen. Keine Profilnamen oder Discord-Passwörter werden gespeichert. Ein geschütztes Cookie hält die Anmeldung bis zu 14 Tage aufrecht. Teilnehmer können ihre Serverdaten selbst herunterladen oder löschen. Die automatische Löschung aller aktiven Teilnehmerdaten ist auf den **1. Februar 2027, 00:00 Uhr Berlin**, festgelegt. Hostersnapshots und Backups brauchen eine entsprechende separate Löschregel. Vor dem Livebetrieb die offenen Betreiber- und Hostingpunkte in [DATENSCHUTZ.md](DATENSCHUTZ.md) klären.
+
 - [Öffentliche Website-Quellen](https://github.com/M4sterChris/creeunity-adventskalender-2026)
 - [Private Tagesinhalte](https://github.com/M4sterChris/creeunity-adventskalender-2026-inhalte) – nur für berechtigte Personen
 - Geplante Website: <https://m4sterchris.github.io/creeunity-adventskalender-2026/>
@@ -17,6 +21,10 @@ GitHub kann geplante Actions und Pages-Deployments verzögern; eine sekundengena
 Eine geöffnete Website prüft etwa jede Minute auf neue Veröffentlichungen und erneut beim Zurückkehren zum Tab. Sobald die Action und Pages fertig sind, werden neue Inhalte ohne manuelles Neuladen verfügbar.
 
 ## Inhalte bearbeiten
+
+Die aktuelle private Arbeitskopie enthält alle 24 überarbeiteten Türchengrafiken, die Codes aus der zentralen Excel-Datei und die Satzteile aus der Planung. Fertige Audios sind an Tag 1, 14 und 21 eingebunden. Tag 7 wartet auf die selbst eingesprochene Funkaufnahme.
+
+Audio erscheint direkt im geöffneten Türchen mit Play/Pause, Suchleiste und Downloadlink. Es startet nicht automatisch und stoppt beim Schließen. Unter **Audio (optional)** im Editor eine MP3-, WAV-, M4A- oder Ogg-Datei bis 25 MB auswählen, probehören und zusammen mit Überschrift und Text privat speichern. Für Türchen ohne Audio bleibt das Feld leer. Neue Dateien werden im privaten `audio/`-Ordner gespeichert und erst mit dem jeweiligen Tag veröffentlicht. Der Server unterstützt Teilbereichsanfragen, damit Vorspulen funktioniert. Die fertigen WAVs bleiben im finalen Arbeitsordner; die Website verwendet platzsparende MP3-Kopien.
 
 1. [Web-Editor öffnen](https://m4sterchris.github.io/creeunity-adventskalender-2026/?admin=true) oder unten auf der Website **Türchen verwalten** anklicken.
 2. Einen [GitHub-Zugriffsschlüssel erstellen](https://github.com/settings/personal-access-tokens/new?name=CreeUnity%20Editor&target_name=M4sterChris&contents=write&expires_in=90). Unter **Only select repositories** ausschließlich `creeunity-adventskalender-2026-inhalte` wählen. Unter Repository permissions **Contents: Read and write** erlauben. Keine weiteren Rechte sind erforderlich. Den Schlüssel nicht in den Chat, URLs oder Repository-Dateien kopieren.
@@ -39,7 +47,7 @@ Alternativ können Mitarbeitende unter [Repository-Zugriff](https://github.com/M
 
 Der bisherige lokale Editor, JSON-Import und JSON-Export bleiben verfügbar. Exportierte vollständige `doors-data.json` und lokale Bilder ausschließlich ins **private Inhalte-Repository** übernehmen. Bilder unter `images/` ablegen und z. B. als `./images/tuerchen5.png` referenzieren. Die öffentliche `doors-data.json` wird automatisch erzeugt.
 
-Die 24 mitgelieferten Grafiken sind klar gekennzeichnete Beispiele, keine echten Gewinne. Vor dem Start die Beispiele im privaten Inhalte-Repository durch eure Tagesinhalte ersetzen. Die öffentliche Datei `doors-data.json` wird automatisch erzeugt und sollte nicht direkt gepflegt werden.
+Die Grafiken in `examples/` und `assets/doors/` bleiben fiktive Beispiele. Die aktuellen echten Inhalte liegen im privaten Inhalte-Repository. Die öffentliche Datei `doors-data.json` wird automatisch erzeugt und sollte nicht direkt gepflegt werden.
 
 Beispiel eines Eintrags im privaten Repository:
 
@@ -65,13 +73,13 @@ Im Web-Editor pro Türchen unter **Tagesrätsel (optional)** den Antworttyp wäh
 - **Buchstabenfolge prüfen:** die richtige Folge eintragen. Die Rückmeldung lautet „Richtig!“.
 - **Kein Rätsel:** zeigt für dieses Türchen keine Eingabe an.
 
-Die Frage selbst steht in deiner Tagesgrafik oder im Feld **Text & Links**. Änderungen mit **Privat auf GitHub speichern** sichern. Die vollständigen Lösungen liegen im privaten Inhalte-Repository. Groß-/Kleinschreibung und Leerzeichen werden bei Buchstabenfolgen ignoriert. Zahlen akzeptieren führende Nullen und Dezimalpunkt oder -komma ohne Rundungsfehler. Unbegrenzt viele Versuche sind möglich.
+Die Frage selbst steht in deiner Tagesgrafik oder im Feld **Text & Links**. Änderungen mit **Privat auf GitHub speichern** sichern. Die vollständigen Lösungen liegen im privaten Inhalte-Repository und werden dem Prüfserver privat bereitgestellt. Groß-/Kleinschreibung und Leerzeichen werden bei Buchstabenfolgen ignoriert. Zahlen akzeptieren führende Nullen und Dezimalpunkt oder -komma ohne Rundungsfehler. Nach zehn Fehlversuchen pausiert nur das betroffene Türchen für 15 Minuten. Danach gibt es wieder zehn Versuche. Ungültige Eingabeformate und Serverfehler verbrauchen keine Versuche. Teilnehmer melden sich mit Discord an. Im Rätsel stehen Restversuche beziehungsweise ein Countdown.
 
 [Erfundene Rätsel-Demo öffnen](https://m4sterchris.github.io/creeunity-adventskalender-2026/?preview=puzzle#kalender): Türchen 1 erwartet **24** und gibt **FRO** aus; Türchen 5 erwartet **HE**. Testlösungen und Testöffnungen bleiben in der Tab-Sitzung bei F5 erhalten. Sie sind nach Modus und Kalenderjahr getrennt und verändern den echten Fortschritt nicht.
 
-Richtig gelöste Rätsel bekommen einen eigenen Haken auf der Kachel. Die Buchstaben sammeln sich unter dem Kalender in Tagesreihenfolge. Öffnungen und richtige Lösungen sind getrennt. Lösungen werden pro Kalenderjahr im Browser unter `creeunity:solved:JAHR` gespeichert; ein geändertes Rätsel macht den alten Haken ungültig. **Infos & Datenschutz → Meinen Fortschritt zurücksetzen** entfernt Öffnungen und gelöste Rätsel. Es gibt keine automatische Nachricht oder Einreichung: Den fertigen Lösungssatz senden die Teilnehmenden selbst privat an M4sterCree.
+Richtig gelöste Rätsel bekommen einen eigenen Haken auf der Kachel. Die Buchstaben sammeln sich unter dem Kalender in Tagesreihenfolge. Öffnungen und richtige Lösungen sind getrennt. Der Prüfserver speichert geöffnete Türchen, gelöste Rätsel und Fehlversuche für das Discord-Konto. Eine geänderte private Lösung oder Belohnung entwertet den alten Erfolg dieses Rätsels. **Infos & Datenschutz → Geöffnete Türchen zurücksetzen** entfernt bei Anmeldung die geöffneten Türchen im Konto auf allen Geräten. Sammlung und laufende Pausen bleiben erhalten, auch nach Logout, Reload, Gerätewechsel oder Serverneustart mit derselben Datenbank. Ohne Anmeldung gilt das Zurücksetzen nur für lokale Gastöffnungen. Es gibt keine automatische Nachricht oder Einreichung: Den fertigen Lösungssatz senden die Teilnehmenden selbst privat an M4sterCree.
 
-Die tägliche Veröffentlichung enthält nur Rätsel bereits freigegebener Tage. Die Klartext-Antwort wird durch einen an Jahr, Tag und Antworttyp gebundenen SHA-256-Prüfwert ersetzt; beim Zahlenrätsel wird zusätzlich die Buchstabenbelohnung veröffentlicht. Zukünftige Rätsel enthalten öffentlich weder Prüfwert noch Antwort noch Belohnung. Die Prüfung läuft im Browser, keine Antwort wird an einen Server geschickt. Das ist eine Spielhilfe: Am freigegebenen Tag können versierte Besucher kurze Antworten durchprobieren und die Zahlen-Belohnung technisch auslesen. Lokale Haken sind kein manipulationssicherer Teilnahmenachweis. Andere Browser/Geräte haben eine eigene Sammlung.
+Die neue tägliche Veröffentlichung enthält für bereits freigegebene Rätsel nur Antworttyp und `serverOnly: true`. Weder Klartextlösung, durchprobierbarer Prüfwert noch Satzteil werden mitgeliefert. Die Eingabe wird mit der Sitzung an die gleichnamige Server-API geschickt. Der Server prüft den Berliner Freigabetag und zählt Fehlversuche atomar. Satzteile werden erst nach richtiger Lösung zurückgegeben. Die private Editorvorschau und die erfundene Rätsel-Demo bleiben getrennte lokale Testmodi ohne Einfluss auf echte Versuche. Ein weiteres Discord-Konto hat einen eigenen Zähler. Das Weitergeben richtiger Lösungen lässt sich damit nicht verhindern. Bereits in einer früheren Git-Historie veröffentlichte Werte werden dadurch nicht rückwirkend geheim.
 
 ## Text formatieren
 
@@ -124,7 +132,7 @@ Die Kurzschrift wird unverändert als normaler Text im privaten Repository gespe
 
 ## Lokal ansehen
 
-Node.js ab Version 20 genügt; keine Installation von npm-Paketen nötig.
+Node.js 24 verwenden; keine Installation von npm-Paketen nötig. Die folgenden statischen Vorschauen ersetzen keinen Prüfserver. Für Discord-Anmeldung und Versuchsbegrenzung siehe [Server starten](server/SETUP.md#lokal-starten).
 
 Öffentlicher Website-Stand:
 
@@ -163,7 +171,7 @@ Dark Mode ist beim ersten Besuch der Standard. Der Sonnenschalter im Header akti
 
 Die Tagesgrafik wird vollständig mit `object-fit: contain` angezeigt. Ein Klick öffnet die bildschirmfüllende Lightbox. **+ / −** zoomen bis auf das Fünffache der eingepassten Größe; anschließend scrollen oder wischen. **Einpassen / Reset** stellt die Gesamtansicht wieder her. **Esc** schließt den obersten Dialog. Tastaturfokus, Bildbeschreibungen und reduzierte Bewegung werden berücksichtigt.
 
-Geöffnete Tage werden pro Kalenderjahr unter `creeunity:opened:JAHR` in `localStorage` gespeichert. Unter **Infos & Datenschutz** lässt sich der Fortschritt zurücksetzen. Bei blockiertem Speicher funktioniert die App weiter, behält den Fortschritt aber nur während des Besuchs. Die App setzt keine Cookies und verwendet kein Tracking oder externe Schriftarten. Fremdgehostete Bilder können Verbindungsdaten an deren Anbieter übertragen.
+Mit Discord-Anmeldung werden geöffnete Türchen pro Konto und Kalenderjahr auf dem Server gespeichert. Andere Browser laden denselben Stand nach Anmeldung, beim erneuten Laden, beim Zurückkehren zum Tab und regelmäßig im Hintergrund. Es gibt keine sofortige Push-Verbindung. Die Öffnungsdaten enthalten nur die Discord-Zuordnung, Kalenderjahr und Türchennummer, keine Besuchszeiten. Gastöffnungen bleiben separat unter `creeunity:opened:JAHR` im lokalen Speicher. Sie werden beim Anmelden nicht automatisch ins Konto übernommen und erscheinen nach Abmelden wieder. Bei blockiertem Browserspeicher bleiben Gastöffnungen nur während des Besuchs erhalten; Kontodaten funktionieren weiterhin. Die Discord-Anmeldung setzt technisch notwendige HttpOnly-Cookies. Es gibt kein Tracking und keine externen Schriftarten. Fremdgehostete Bilder können Verbindungsdaten an deren Anbieter übertragen. Einzelheiten stehen unter **Infos & Datenschutz** und in der [Serverdokumentation](server/SETUP.md).
 
 Für echte Gewinnspiele Teilnahmebedingungen und erforderliche Betreiber-/Datenschutzhinweise ergänzen. Personenbezogene Teilnehmerdaten oder Zugangsdaten gehören auch nach der Freigabe nicht in öffentliche Tagesinhalte.
 
@@ -189,6 +197,10 @@ tools/publish-doors.mjs            Zeitprüfung und sichere Inhaltsauswahl
 tools/build-pages.mjs              Pages-Artefakt ohne private Quellen
 tools/prepare-private-repository.mjs
 tools/serve.mjs                    Lokale öffentliche/private Vorschau
+server/app.mjs                     Website und API auf demselben Server, mit Discord-OAuth
+server/store.mjs                   Persistente Konten, Sitzungen und Rätselpausen in SQLite
+server/SETUP.md                    Discord-App und Serverhosting einrichten
+puzzle-client.js                   API-Zugriff und Anzeige der Versuche/Pausen
 templates/private-repository/     Vorlage des privaten Freigabe-Workflows
 tests/                            Datums-, Validierungs- und Veröffentlichungstests
 .private-repository/              Getrennte private Arbeitskopie; nicht im öffentlichen Git
@@ -198,4 +210,4 @@ tests/                            Datums-, Validierungs- und Veröffentlichungst
 node --test tests/*.test.mjs
 ```
 
-Die Tests prüfen Berliner Mitternacht, Sommerzeit, Jahresgrenzen, Schema und URLs sowie insbesondere die Geheimhaltung künftiger Inhalte, Pfadgrenzen, Auswahl ausschließlich freigegebener Bilder und wiederholbare Veröffentlichungen. Das öffentliche Pages-Artefakt wird mit `node tools/build-pages.mjs` in ein zuvor leeres `_site/` erzeugt.
+Die Tests prüfen Datumsgrenzen, Geheimhaltung, Veröffentlichungen und Textformatierung sowie Discord-Anmeldung, Sitzungscookies, Versuchsgrenzen, parallele Eingaben und die Aufhebung der 15-Minuten-Sperre. Das öffentliche Pages-Artefakt wird mit `node tools/build-pages.mjs` in ein zuvor leeres `_site/` erzeugt. Serverdateien, Datenbank und private Inhalte werden nicht mitgeliefert.

@@ -3,6 +3,11 @@ node_modules/
 *.log
 CreeUnity-Adventskalender.zip
 .private-repository/
+output/
+.calendar-data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
 _site/
 .env
 .env.*

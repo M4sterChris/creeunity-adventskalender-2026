@@ -11,6 +11,7 @@ if (exists) { console.log('Privates Inhalte-Verzeichnis bereits vorhanden; es wu
 else {
   const data = JSON.parse(await readFile(resolve(root, 'examples/doors-data.example.json'), 'utf8'));
   await mkdir(resolve(target, 'images'), { recursive: true });
+  await mkdir(resolve(target, 'audio'), { recursive: true });
   await mkdir(resolve(target, '.github/workflows'), { recursive: true });
   for (const door of data.doors) {
     const name = `day-${String(door.day).padStart(2, '0')}.svg`;

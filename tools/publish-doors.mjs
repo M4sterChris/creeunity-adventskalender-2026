@@ -4,7 +4,7 @@ import { resolve, relative, sep, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { validateConfig, isDoorUnlocked } from '../script.js';
-import { puzzleHashInput } from '../puzzles.js';
+import { privateAudioPath } from '../media.js';
 
 /** Neue Objektstruktur statt Entfernen einzelner Felder: Künftige Inhalte bleiben privat. */
 export function selectReleasedContents(input, now = new Date()) {
@@ -13,10 +13,10 @@ export function selectReleasedContents(input, now = new Date()) {
     version: 1, year: config.year, links: config.links, releaseMode: 'daily',
     doors: config.doors.map(door => isDoorUnlocked(door.day, config.year, now) ? {
       day: door.day, title: door.title, image: door.image, alt: door.alt, text: door.text, released: true,
+      ...(door.audio ? { audio: door.audio } : {}),
       ...(door.puzzle ? { puzzle: {
         type: door.puzzle.type,
-        answerHash: door.puzzle.answerHash || createHash('sha256').update(puzzleHashInput(door.puzzle.answer, door.puzzle.type, config.year, door.day)).digest('hex'),
-        ...(door.puzzle.type === 'number' ? { fragment: door.puzzle.fragment } : {}),
+        serverOnly: true,
       } } : {}),
     } : {
       day: door.day, title: `Türchen ${door.day} – Noch ein bisschen Vorfreude`,
@@ -56,6 +56,20 @@ export async function publishDoors({ source, target, now = new Date() }) {
     const destination = `assets/released/${output.year}/day-${String(door.day).padStart(2, '0')}-${hash}${extname(path).toLowerCase()}`;
     copies.push({ destination, bytes });
     door.image = `./${destination}`;
+  }
+  // Audio folgt derselben Tagesfreigabe wie die Grafik; Zukunftsdateien nie lesen/kopieren.
+  for (const door of output.doors.filter(item => item.released && item.audio)) {
+    if (/^https:\/\//i.test(door.audio)) continue;
+    const path = privateAudioPath(door.audio);
+    const audioPath = await realpath(resolve(sourceRoot, path));
+    if (!audioPath.startsWith(`${resolve(sourceRoot, 'audio')}${sep}`)) throw new Error('Audio verweist außerhalb des privaten audio/-Ordners.');
+    const info = await stat(audioPath);
+    if (!info.isFile() || info.size > 25 * 1024 * 1024) throw new Error('Eine veröffentlichte Audiodatei fehlt oder ist größer als 25 MB.');
+    const bytes = await readFile(audioPath);
+    const hash = createHash('sha256').update(bytes).digest('hex').slice(0, 16);
+    const destination = `assets/released/${output.year}/day-${String(door.day).padStart(2, '0')}-audio-${hash}${extname(path).toLowerCase()}`;
+    copies.push({ destination, bytes });
+    door.audio = `./${destination}`;
   }
   // Erst nach vollständiger Prüfung schreiben. Keine privaten Dateinamen in Fehlermeldungen.
   for (const { destination, bytes } of copies) {

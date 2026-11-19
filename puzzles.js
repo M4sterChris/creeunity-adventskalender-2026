@@ -16,7 +16,12 @@ export function validatePuzzle(value) {
   if (typeof value !== 'object' || Array.isArray(value) || !['number', 'letters'].includes(value.type)) throw new Error('Bitte einen gültigen Rätseltyp wählen.');
   const hasAnswer = typeof value.answer === 'string';
   const hasHash = typeof value.answerHash === 'string';
-  if (hasAnswer === hasHash) throw new Error('Das Rätsel benötigt genau eine Lösung oder einen veröffentlichten Prüfwert.');
+  const serverOnly = value.serverOnly === true;
+  if ([hasAnswer, hasHash, serverOnly].filter(Boolean).length !== 1) throw new Error('Das Rätsel benötigt genau eine Lösung, einen Prüfwert oder eine Serverprüfung.');
+  if (serverOnly) {
+    if (value.fragment != null) throw new Error('Bei Serverprüfung darf die Belohnung nicht öffentlich mitgeliefert werden.');
+    return { type: value.type, serverOnly: true };
+  }
   if (hasAnswer && !normalizePuzzleAnswer(value.answer, value.type)) throw new Error('Bitte eine gültige Rätsellösung mit maximal 120 Zeichen eingeben.');
   if (hasHash && !/^[a-f0-9]{64}$/.test(value.answerHash)) throw new Error('Der veröffentlichte Rätsel-Prüfwert ist ungültig.');
   const result = { type: value.type, ...(hasAnswer ? { answer: value.answer.trim() } : { answerHash: value.answerHash }) };
@@ -33,10 +38,11 @@ export function puzzleHashInput(answer, type, year, day) {
 }
 
 export function puzzleIdentity(puzzle) {
-  return puzzle ? JSON.stringify([puzzle.type, puzzle.answerHash || normalizePuzzleAnswer(puzzle.answer, puzzle.type), puzzle.fragment || '']) : '';
+  return puzzle ? JSON.stringify([puzzle.type, puzzle.serverOnly ? 'server' : puzzle.answerHash || normalizePuzzleAnswer(puzzle.answer, puzzle.type), puzzle.fragment || '']) : '';
 }
 
 export async function checkPuzzleAnswer(puzzle, input, year, day) {
+  if (puzzle.serverOnly) throw new Error('Dieses Rätsel wird ausschließlich auf dem Server geprüft.');
   const answer = normalizePuzzleAnswer(input, puzzle.type);
   if (!answer) return { correct: false, fragment: '' };
   let correct;

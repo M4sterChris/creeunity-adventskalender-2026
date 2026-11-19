@@ -207,6 +207,15 @@ html[data-theme=dark] .button:not(.button-secondary){background:#b0ff6b;border-c
 /* Bei höheren Rasterzeilen bleiben die seitlichen Maskottchen vollständig im Bild. */
 @media(min-width:761px){.winter-scene{background-size:100% auto;background-color:#d1e3da}}
 
+.door-audio-section{margin:20px 24px;padding:20px;border:1px solid var(--line,#426043);border-radius:16px;background:var(--surface,#142319)}
+.door-audio-section h3{font-size:1.125rem;margin:0 0 12px}
+.door-audio-section audio,.audio-upload audio{display:block;width:100%;min-width:0;margin:12px 0;color-scheme:light dark}
+.audio-error{color:var(--muted);font-size:1rem;line-height:1.5}
+.audio-upload{margin:20px 0;padding:16px;border:1px solid var(--line,#426043);border-radius:12px;min-width:0}
+.audio-upload legend{padding:0 6px}
+.audio-upload small{display:block;margin:6px 0 12px;line-height:1.5}
+@media(max-width:480px){.door-audio-section{margin:16px 12px;padding:14px}.audio-upload{padding:12px}}
+
 /* Persönliche Weihnachtsdetails: Emote-Grün, Türkis und warmes Lichtergold. */
 :root{--emote-teal:#48ad9e;--festive-cream:#fff0ce;--festive-gold:#eed79d}
 .hero{grid-template-columns:minmax(0,1fr) 160px;gap:40px}
@@ -258,6 +267,12 @@ html[data-theme=dark] .twitch-link{border-color:#48ad9e55}
 .preview-control>a{display:inline-block;margin:12px 0 0 24px;font-weight:600}
 
 /* Tagesrätsel: geöffnet und gelöst bleiben zwei getrennte Zustände. */
+.participant-access{max-width:1206px;margin:24px auto 0;padding:18px 28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;background:var(--cream)}
+.participant-access[hidden]{display:none}.participant-access p{flex:1 1 280px;margin:0;line-height:1.7;font-size:14px;color:var(--muted)}
+.participant-access .button{text-decoration:none}.puzzle-attempts{font-size:13px;line-height:1.7;color:var(--muted);margin:12px 0 0}.puzzle-attempts:empty{display:none}
+.participant-data-controls{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:16px 0}.participant-data-controls[hidden]{display:none}#account-feedback:empty{display:none}#account-feedback{font-size:14px;line-height:1.7}
+#puzzle-login{font-size:14px;line-height:1.8}#puzzle-login a{display:inline-block;color:var(--ink);font-weight:650}
+@media(max-width:760px){.participant-access{margin:18px 14px 0;padding:18px 20px}}
 .door-solved{position:absolute;z-index:4;right:8px;top:8px;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:1px solid #caff9e;background:#163c28;color:#caff9e;font-size:17px;font-weight:800;box-shadow:0 2px 8px #0006;pointer-events:none}
 .door-puzzle{margin:0 26px 24px;padding:20px;border:1px solid var(--line);border-radius:12px;background:#72b65d0b}
 .door-puzzle h3{margin:0 0 14px;font-size:17px;letter-spacing:-.3px}

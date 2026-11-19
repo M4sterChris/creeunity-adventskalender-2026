@@ -23,6 +23,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
       - name: Kalender und Veröffentlichung prüfen
         run: node --test tests/*.test.mjs
       - uses: actions/configure-pages@v5

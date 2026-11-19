@@ -41,12 +41,12 @@ try {
   assert.equal(treeResponse.status, 200, 'Öffentliche Repository-Dateiliste ist nicht prüfbar.');
   const tree = await treeResponse.json();
   assert.equal(tree.truncated, false, 'Repository-Dateiliste ist unvollständig.');
-  const forbidden = tree.tree.some(entry => /^(?:\.private-repository|\.qa|images)\//.test(entry.path)
+  const forbidden = tree.tree.some(entry => /^(?:\.private-repository|\.qa|images|audio|output)\//.test(entry.path)
     || /^\.env(?:\.|$)/.test(entry.path) || /\.(?:pem|key)$/i.test(entry.path));
   assert.ok(!forbidden, 'Private Arbeitsdateien oder ungeschützte Bilderpfade im öffentlichen Repository gefunden.');
   const publishedImages = tree.tree.filter(entry => entry.type === 'blob' && /^assets\/released\//.test(entry.path));
   for (const entry of publishedImages) {
-    const match = /^assets\/released\/(\d{4})\/day-(\d{2})-[a-f0-9]+\.[a-z0-9]+$/i.exec(entry.path);
+    const match = /^assets\/released\/(\d{4})\/day-(\d{2})-(?:audio-)?[a-f0-9]+\.[a-z0-9]+$/i.exec(entry.path);
     assert.ok(match, 'Eine veröffentlichte Bilddatei kann keinem Freigabetag zugeordnet werden.');
     assert.ok(isDoorUnlocked(Number(match[2]), Number(match[1]), now), 'Eine zukünftige Tagesgrafik liegt bereits im öffentlichen Repository.');
   }

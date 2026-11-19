@@ -31,7 +31,7 @@ test('Rätsel sind optional und alte Kalender bleiben unverändert gültig', () 
   assert.equal(validateConfig(source()).doors[0].puzzle.fragment, 'FRO');
 });
 test('Unvollständige, ungültige und mehrdeutige Rätsel werden abgewiesen', () => {
-  for (const value of [{}, [], { type: 'number', answer: 'x', fragment: 'A' }, { type: 'number', answer: '1' }, { type: 'letters', answer: '' }, { type: 'letters', answerHash: 'oops' }, { type: 'letters', answer: 'A', answerHash: 'a'.repeat(64) }]) assert.throws(() => validatePuzzle(value));
+  for (const value of [{}, [], { type: 'number', answer: 'x', fragment: 'A' }, { type: 'number', answer: '1' }, { type: 'letters', answer: '' }, { type: 'letters', answerHash: 'oops' }, { type: 'letters', answer: 'A', answerHash: 'a'.repeat(64) }, {type:'number',serverOnly:true,fragment:'GEHEIM'}, {type:'letters',serverOnly:true,answer:'GEHEIM'}]) assert.throws(() => validatePuzzle(value));
   const bad = source(); bad.doors[0].puzzle.fragment = '';
   assert.throws(() => validateConfig(bad), /Türchen 1/);
 });
@@ -51,25 +51,21 @@ test('Vor Freigabe werden weder Lösung, Prüfwert noch Belohnung veröffentlich
   assert.ok(output.doors.every(door => !Object.hasOwn(door, 'puzzle')));
   assert.doesNotMatch(JSON.stringify(output), /answer|fragment|FRO|answerHash/);
 });
-test('Am ersten Tag erscheint nur dessen Prüfwert, nicht die Klartextlösung', async () => {
+test('Am ersten Tag erscheint nur die Serverprüfung, keine Lösung, Belohnung oder durchprobierbarer Prüfwert', async () => {
   const output = selectReleasedContents(source(), new Date('2026-11-30T23:00:00Z'));
   const puzzle = output.doors[0].puzzle;
-  assert.match(puzzle.answerHash, /^[a-f0-9]{64}$/);
-  assert.equal(Object.hasOwn(puzzle, 'answer'), false);
+  assert.deepEqual(puzzle, { type: 'number', serverOnly: true });
   assert.equal(output.doors[1].puzzle, undefined);
-  assert.deepEqual(await checkPuzzleAnswer(puzzle, '42', 2026, 1), { correct: true, fragment: 'FRO' });
-  assert.equal((await checkPuzzleAnswer(puzzle, '42', 2026, 2)).correct, false);
-  assert.equal((await checkPuzzleAnswer(puzzle, '42', 2027, 1)).correct, false);
+  await assert.rejects(checkPuzzleAnswer(puzzle, '42', 2026, 1), /Server/);
 });
 test('Veröffentlichte Buchstabenprüfungen enthalten keine Klartext-Buchstabenfolge', async () => {
   const output = selectReleasedContents(source(), new Date('2026-12-01T23:00:00Z'));
   const puzzle = output.doors[1].puzzle;
-  assert.deepEqual(Object.keys(puzzle).sort(), ['answerHash', 'type']);
-  assert.equal((await checkPuzzleAnswer(puzzle, ' h e ', 2026, 2)).correct, true);
-  assert.equal((await checkPuzzleAnswer(puzzle, 'X', 2026, 2)).correct, false);
-  assert.equal(validateConfig(output).doors[1].puzzle.answerHash, puzzle.answerHash);
+  assert.deepEqual(puzzle, { type: 'letters', serverOnly: true });
+  await assert.rejects(checkPuzzleAnswer(puzzle, ' h e ', 2026, 2), /Server/);
+  assert.equal(validateConfig(output).doors[1].puzzle.serverOnly, true);
 });
-test('Rätsel-Prüfwerte bleiben bei erneutem Publizieren unverändert', () => {
+test('Öffentliche Serverprüfungen bleiben bei erneutem Publizieren unverändert', () => {
   const now = new Date('2026-12-24T12:00:00Z');
   assert.deepEqual(selectReleasedContents(source(), now), selectReleasedContents(source(), now));
 });

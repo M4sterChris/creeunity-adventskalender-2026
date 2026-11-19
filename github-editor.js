@@ -3,6 +3,7 @@
  * Keine Tokens in URLs, localStorage, Fehlertexten oder im Repository speichern.
  */
 export const CONTENT_REPOSITORY = 'M4sterChris/creeunity-adventskalender-2026-inhalte';
+import { privateAudioPath, detectAudio } from './media.js';
 const ROOT = `https://api.github.com/repos/${CONTENT_REPOSITORY}`;
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
@@ -75,7 +76,11 @@ export class GitHubEditor {
     const path = privateImagePath(value);
     return this.#request(`contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(this.#head)}`, { raw: true });
   }
-  async save(config, images = []) {
+  async audio(value) {
+    const path = privateAudioPath(value);
+    return this.#request(`contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(this.#head)}`, { raw: true });
+  }
+  async save(config, images = [], audios = []) {
     if (!this.#configSHA) throw new Error('Bitte zunächst die privaten Inhalte laden.');
     if (config.releaseMode === 'daily') throw new Error('Bitte zunächst die vollständigen privaten Inhalte laden.');
     const head = await this.#request('git/ref/heads/main');
@@ -86,6 +91,11 @@ export class GitHubEditor {
     // Dateien und Konfiguration werden gemeinsam in genau einem Commit gespeichert.
     for (const { path, bytes } of images) {
       const clean = privateImagePath(path); detectImage(bytes);
+      const blob = await this.#request('git/blobs', { method: 'POST', body: { content: encodeBase64(bytes), encoding: 'base64' } });
+      entries.push({ path: clean, mode: '100644', type: 'blob', sha: blob.sha });
+    }
+    for (const { path, bytes } of audios) {
+      const clean = privateAudioPath(path); detectAudio(bytes);
       const blob = await this.#request('git/blobs', { method: 'POST', body: { content: encodeBase64(bytes), encoding: 'base64' } });
       entries.push({ path: clean, mode: '100644', type: 'blob', sha: blob.sha });
     }
