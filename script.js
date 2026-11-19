@@ -594,13 +594,12 @@ function initialize() {
       const door = state.config.doors.find(item => item.day === day);
       const opened = visibleOpened.has(door.day);
       const unlocked = isCalendarDayUnlocked(door.day, now) && door.released !== false;
-      const today = december && berlin.day === door.day;
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = `door${opened ? ' is-opened' : ''}${today ? ' is-today' : ''}${door.day === 24 ? ' is-finale' : ''}`;
+      button.className = `door${opened ? ' is-opened' : ''}${door.day === 24 ? ' is-finale' : ''}`;
       button.dataset.day = door.day;
       const isSolved = solved.some(item => item.day === door.day);
-      button.setAttribute('aria-label', `Türchen ${door.day}${opened ? ', bereits geöffnet' : ''}${isSolved ? ', Rätsel gelöst' : ''}${today ? ', heute' : ''}${!unlocked && !state.preview ? `, öffnet am ${door.day}. ${releaseMonthName()} ${year}` : ''}`);
+      button.setAttribute('aria-label', `Türchen ${door.day}${opened ? ', bereits geöffnet' : ''}${isSolved ? ', Rätsel gelöst' : ''}${!unlocked && !state.preview ? `, öffnet am ${door.day}. ${releaseMonthName()} ${year}` : ''}`);
       // Gesperrte Türchen bleiben bedienbar, damit die freundliche Nachricht erreichbar ist.
       const ornament = document.createElement('span');
       ornament.className = 'door-decoration'; ornament.setAttribute('aria-hidden', 'true');
@@ -615,7 +614,6 @@ function initialize() {
       if (opened) renderDoorThumbnail(door, reveal, state.preview || unlocked);
       button.append(reveal, leaf);
       if (isSolved) { const badge = document.createElement('span'); badge.className = 'door-solved'; badge.textContent = '✓'; badge.setAttribute('aria-hidden', 'true'); button.append(badge); }
-      if (today) { const tag = document.createElement('span'); tag.className = 'today-tag'; tag.textContent = 'HEUTE'; button.append(tag); }
       fragment.append(button);
     }
     $('doors-grid').replaceChildren(fragment);
