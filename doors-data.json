@@ -252,11 +252,16 @@
     },
     {
       "day": 21,
-      "title": "Türchen 21 – Noch ein bisschen Vorfreude",
-      "image": "./assets/placeholder.svg",
-      "alt": "Die Überraschung ist noch nicht veröffentlicht.",
+      "title": "Das Klangschloss",
+      "image": "./assets/released/2026/test-11/day-21-65a9901406be1812.png",
+      "alt": "Rätselgrafik zu Das Klangschloss",
       "text": "",
-      "released": false
+      "released": true,
+      "audio": "./assets/released/2026/test-11/day-21-audio-d8ecbdcdaa745bf1.mp3",
+      "puzzle": {
+        "type": "number",
+        "serverOnly": true
+      }
     },
     {
       "day": 22,
